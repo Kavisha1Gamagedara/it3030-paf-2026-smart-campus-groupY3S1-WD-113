@@ -3,6 +3,9 @@ import React, { useEffect, useState } from 'react'
 export default function Login() {
   const [status, setStatus] = useState({ oauthEnabled: false })
   const [loading, setLoading] = useState(true)
+  const [selectedRole, setSelectedRole] = useState('USER')
+
+  const roleOptions = status.roles || ['USER', 'ADMIN', 'STUDENT', 'TECHNICIAN', 'MANAGER']
 
   useEffect(() => {
     const loadStatus = async () => {
@@ -31,6 +34,16 @@ export default function Login() {
     )
   }
 
+  const handleRoleSelect = (role) => {
+    setSelectedRole(role)
+  }
+
+  const handleLogin = () => {
+    localStorage.setItem('smartCampusRole', selectedRole)
+    const target = `http://localhost:8080${status.authorizationUrl || '/oauth2/authorization/google'}`
+    window.location.href = target
+  }
+
   return (
     <main className="page">
       <div className="login-card">
@@ -40,11 +53,23 @@ export default function Login() {
         {status.oauthEnabled ? (
           <div>
             <p className="status-ok">OAuth is enabled</p>
-            <a href={`http://localhost:8080${status.authorizationUrl || '/oauth2/authorization/google'}`}>
-              <button className="btn btn-primary">Sign in with Google</button>
-            </a>
+            <div className="role-grid" style={{ marginTop: 12 }}>
+              {roleOptions.map((role) => (
+                <button
+                  key={role}
+                  type="button"
+                  className={`role-chip ${selectedRole === role ? 'active' : ''}`}
+                  onClick={() => handleRoleSelect(role)}
+                >
+                  {role.replace('_', ' ')}
+                </button>
+              ))}
+            </div>
+            <button className="btn btn-primary" style={{ marginTop: 16 }} onClick={handleLogin}>
+              Continue as {selectedRole.replace('_', ' ')}
+            </button>
             <p className="helper" style={{ marginTop: 12 }}>
-              You will be redirected to your dashboard after authentication.
+              You will sign in with Google and land in the {selectedRole.replace('_', ' ').toLowerCase()} dashboard.
             </p>
           </div>
         ) : (

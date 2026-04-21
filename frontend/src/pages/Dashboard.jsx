@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 
 export default function Dashboard() {
   const [user, setUser] = useState(null)
   const [profile, setProfile] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [updatingRole, setUpdatingRole] = useState(false)
 
   useEffect(() => {
     const loadUser = async () => {
@@ -30,6 +31,38 @@ export default function Dashboard() {
     loadUser()
   }, [])
 
+  useEffect(() => {
+    const syncRole = async () => {
+      if (loading || !user || !user.sub || updatingRole) {
+        return
+      }
+
+      const storedRole = localStorage.getItem('smartCampusRole')
+      if (!storedRole || storedRole === (profile && profile.role)) {
+        return
+      }
+
+      try {
+        setUpdatingRole(true)
+        const res = await fetch('http://localhost:8080/api/user/role', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ role: storedRole })
+        })
+
+        if (res.ok) {
+          const updated = await res.json()
+          setProfile(updated)
+        }
+      } finally {
+        setUpdatingRole(false)
+      }
+    }
+
+    syncRole()
+  }, [loading, user, profile, updatingRole])
+
   if (loading) {
     return (
       <main className="page">
@@ -41,7 +74,22 @@ export default function Dashboard() {
     )
   }
 
+  const navigate = useNavigate()
+
   const loggedIn = user && user.sub
+
+  useEffect(() => {
+    // dispatch to role-specific dashboard when logged in
+    const dispatch = () => {
+      const role = (profile && profile.role) || localStorage.getItem('smartCampusRole') || 'USER'
+      const route = `/dashboard/${role.toLowerCase()}`
+      navigate(route, { replace: true })
+    }
+
+    if (!loading && loggedIn) {
+      dispatch()
+    }
+  }, [loading, loggedIn, profile, navigate])
 
   return (
     <main className="page">
@@ -57,11 +105,18 @@ export default function Dashboard() {
         {loggedIn && (
           <div>
             <p className="status-ok">Signed in as {user.name || user.email}</p>
+            <div className="role-row" style={{ marginTop: 12 }}>
+              <span className="helper">Role: {displayRole.replace('_', ' ')}</span>
+              <button type="button" className="btn btn-outline" onClick={handleLogout}>
+                Logout
+              </button>
+            </div>
             {profile && (
               <div className="card" style={{ marginTop: 16 }}>
                 <h4 style={{ marginTop: 0 }}>MongoDB Profile</h4>
                 <p className="helper">Name: {profile.name || '-'}</p>
                 <p className="helper">Email: {profile.email || '-'}</p>
+                <p className="helper">Role: {profile.role || '-'}</p>
                 <p className="helper">Provider: {profile.provider || '-'}</p>
                 <p className="helper">Updated: {profile.updatedAt || '-'}</p>
               </div>

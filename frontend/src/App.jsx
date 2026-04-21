@@ -3,6 +3,11 @@ import { BrowserRouter, Routes, Route, Link } from 'react-router-dom'
 import Home from './pages/Home'
 import Login from './pages/Login'
 import Dashboard from './pages/Dashboard'
+import DashboardAdmin from './pages/DashboardAdmin'
+import DashboardUser from './pages/DashboardUser'
+import DashboardStudent from './pages/DashboardStudent'
+import DashboardTechnician from './pages/DashboardTechnician'
+import DashboardManager from './pages/DashboardManager'
 
 export default function App() {
   return (
@@ -21,6 +26,11 @@ export default function App() {
         <Route path="/" element={<Home />} />
         <Route path="/login" element={<Login />} />
         <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/dashboard/admin" element={<DashboardAdmin />} />
+        <Route path="/dashboard/user" element={<DashboardUser />} />
+        <Route path="/dashboard/student" element={<DashboardStudent />} />
+        <Route path="/dashboard/technician" element={<DashboardTechnician />} />
+        <Route path="/dashboard/manager" element={<DashboardManager />} />
       </Routes>
     </BrowserRouter>
   )

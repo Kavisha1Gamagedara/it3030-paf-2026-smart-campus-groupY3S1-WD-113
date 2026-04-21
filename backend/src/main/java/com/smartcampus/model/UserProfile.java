@@ -16,6 +16,7 @@ public class UserProfile {
     private String name;
     private String email;
     private String picture;
+    private String role;
     private Instant createdAt;
     private Instant updatedAt;
 
@@ -65,6 +66,14 @@ public class UserProfile {
 
     public void setPicture(String picture) {
         this.picture = picture;
+    }
+
+    public String getRole() {
+        return role;
+    }
+
+    public void setRole(String role) {
+        this.role = role;
     }
 
     public Instant getCreatedAt() {
