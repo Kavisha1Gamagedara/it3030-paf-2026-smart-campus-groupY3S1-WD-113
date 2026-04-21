@@ -7,6 +7,8 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true)
   const [updatingRole, setUpdatingRole] = useState(false)
 
+  const navigate = useNavigate()
+
   useEffect(() => {
     const loadUser = async () => {
       try {
@@ -62,20 +64,6 @@ export default function Dashboard() {
 
     syncRole()
   }, [loading, user, profile, updatingRole])
-
-  if (loading) {
-    return (
-      <main className="page">
-        <div className="login-card">
-          <h1 style={{ marginTop: 0 }}>Dashboard</h1>
-          <p className="helper">Loading your profile...</p>
-        </div>
-      </main>
-    )
-  }
-
-  const navigate = useNavigate()
-
   const loggedIn = user && user.sub
 
   useEffect(() => {
@@ -91,6 +79,31 @@ export default function Dashboard() {
     }
   }, [loading, loggedIn, profile, navigate])
 
+  const displayRole = (profile && profile.role) || localStorage.getItem('smartCampusRole') || 'USER'
+
+  const handleLogout = async () => {
+    try {
+      await fetch('http://localhost:8080/api/auth/logout', {
+        method: 'POST',
+        credentials: 'include'
+      })
+    } finally {
+      setUser(null)
+      setProfile(null)
+      window.location.href = '/login'
+    }
+  }
+
+  if (loading) {
+    return (
+      <main className="page">
+        <div className="login-card">
+          <h1 style={{ marginTop: 0 }}>Dashboard</h1>
+          <p className="helper">Loading your profile...</p>
+        </div>
+      </main>
+    )
+  }
   return (
     <main className="page">
       <div className="login-card">
