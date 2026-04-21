@@ -1,48 +1,21 @@
 import React, { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import LogoutButton from '../components/LogoutButton'
+import { useAuth } from '../auth/AuthContext'
 
 export default function Dashboard() {
-  const [user, setUser] = useState(null)
-  const [profile, setProfile] = useState(null)
-  const [loading, setLoading] = useState(true)
+  const { user: authUser, profile: authProfile, loading, reload } = useAuth() || {}
   const [updatingRole, setUpdatingRole] = useState(false)
-
   const navigate = useNavigate()
 
-  useEffect(() => {
-    const loadUser = async () => {
-      try {
-        const userRes = await fetch('http://localhost:8080/api/user', { credentials: 'include' })
-        const userJson = await userRes.json()
-        setUser(userJson)
-
-        if (userJson && userJson.sub) {
-          const profileRes = await fetch('http://localhost:8080/api/user/profile', { credentials: 'include' })
-          if (profileRes.ok) {
-            const profileJson = await profileRes.json()
-            setProfile(profileJson)
-          }
-        }
-      } catch (error) {
-        setUser(null)
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    loadUser()
-  }, [])
+  const loggedIn = authUser && (authUser.sub || authUser.id)
 
   useEffect(() => {
     const syncRole = async () => {
-      if (loading || !user || !user.sub || updatingRole) {
-        return
-      }
+      if (loading || !loggedIn || updatingRole) return
 
       const storedRole = localStorage.getItem('smartCampusRole')
-      if (!storedRole || storedRole === (profile && profile.role)) {
-        return
-      }
+      if (!storedRole || (authProfile && storedRole === authProfile.role)) return
 
       try {
         setUpdatingRole(true)
@@ -54,8 +27,8 @@ export default function Dashboard() {
         })
 
         if (res.ok) {
-          const updated = await res.json()
-          setProfile(updated)
+          // refresh profile from auth provider
+          if (reload) await reload()
         }
       } finally {
         setUpdatingRole(false)
@@ -63,36 +36,16 @@ export default function Dashboard() {
     }
 
     syncRole()
-  }, [loading, user, profile, updatingRole])
-  const loggedIn = user && user.sub
+  }, [loading, loggedIn, authProfile, updatingRole, reload])
 
   useEffect(() => {
-    // dispatch to role-specific dashboard when logged in
-    const dispatch = () => {
-      const role = (profile && profile.role) || localStorage.getItem('smartCampusRole') || 'USER'
-      const route = `/dashboard/${role.toLowerCase()}`
-      navigate(route, { replace: true })
-    }
-
     if (!loading && loggedIn) {
-      dispatch()
+      const role = (authProfile && authProfile.role) || localStorage.getItem('smartCampusRole') || 'USER'
+      navigate(`/dashboard/${role.toLowerCase()}`, { replace: true })
     }
-  }, [loading, loggedIn, profile, navigate])
+  }, [loading, loggedIn, authProfile, navigate])
 
-  const displayRole = (profile && profile.role) || localStorage.getItem('smartCampusRole') || 'USER'
-
-  const handleLogout = async () => {
-    try {
-      await fetch('http://localhost:8080/api/auth/logout', {
-        method: 'POST',
-        credentials: 'include'
-      })
-    } finally {
-      setUser(null)
-      setProfile(null)
-      window.location.href = '/login'
-    }
-  }
+  const displayRole = (authProfile && authProfile.role) || localStorage.getItem('smartCampusRole') || 'USER'
 
   if (loading) {
     return (
@@ -104,6 +57,7 @@ export default function Dashboard() {
       </main>
     )
   }
+
   return (
     <main className="page">
       <div className="login-card">
@@ -117,21 +71,19 @@ export default function Dashboard() {
 
         {loggedIn && (
           <div>
-            <p className="status-ok">Signed in as {user.name || user.email}</p>
+            <p className="status-ok">Signed in as {authUser.name || authUser.email}</p>
             <div className="role-row" style={{ marginTop: 12 }}>
               <span className="helper">Role: {displayRole.replace('_', ' ')}</span>
-              <button type="button" className="btn btn-outline" onClick={handleLogout}>
-                Logout
-              </button>
+              <LogoutButton className="btn btn-outline">Logout</LogoutButton>
             </div>
-            {profile && (
+            {authProfile && (
               <div className="card" style={{ marginTop: 16 }}>
                 <h4 style={{ marginTop: 0 }}>MongoDB Profile</h4>
-                <p className="helper">Name: {profile.name || '-'}</p>
-                <p className="helper">Email: {profile.email || '-'}</p>
-                <p className="helper">Role: {profile.role || '-'}</p>
-                <p className="helper">Provider: {profile.provider || '-'}</p>
-                <p className="helper">Updated: {profile.updatedAt || '-'}</p>
+                <p className="helper">Name: {authProfile.name || '-'}</p>
+                <p className="helper">Email: {authProfile.email || '-'}</p>
+                <p className="helper">Role: {authProfile.role || '-'}</p>
+                <p className="helper">Provider: {authProfile.provider || '-'}</p>
+                <p className="helper">Updated: {authProfile.updatedAt || '-'}</p>
               </div>
             )}
           </div>
