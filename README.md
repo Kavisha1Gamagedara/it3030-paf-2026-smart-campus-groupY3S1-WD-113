@@ -1,6 +1,3 @@
-<<<<<<< HEAD
-# -Smart_Campus_Operations_Hub_PAF
-=======
 # my-smart-campus-app
 
 Monorepo for Smart Campus web application.
@@ -20,4 +17,3 @@ Quick start (frontend):
 2. Install deps: `npm install`
 3. Run dev server: `npm run dev`
 
->>>>>>> master
