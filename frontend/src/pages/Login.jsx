@@ -1,8 +1,13 @@
 import React, { useEffect, useState } from 'react'
+import { useEffect as useEff, useState as useSt } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { useAuth } from '../auth/AuthContext'
 
 export default function Login() {
   const [status, setStatus] = useState({ oauthEnabled: false })
   const [loading, setLoading] = useState(true)
+  const auth = useAuth()
+  const navigate = useNavigate()
   const [selectedRole, setSelectedRole] = useState('USER')
 
   const roleOptions = status.roles || ['USER', 'ADMIN', 'STUDENT', 'TECHNICIAN', 'MANAGER']
@@ -22,6 +27,12 @@ export default function Login() {
 
     loadStatus()
   }, [])
+
+  useEffect(() => {
+    if (!loading && auth && auth.user) {
+      navigate('/dashboard', { replace: true })
+    }
+  }, [loading, auth, navigate])
 
   if (loading) {
     return (
