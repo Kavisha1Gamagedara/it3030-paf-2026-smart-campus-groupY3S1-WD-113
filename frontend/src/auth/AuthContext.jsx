@@ -106,6 +106,36 @@ export function AuthProvider({ children }) {
     }
   }
 
+  const deleteProfile = async () => {
+    // If local admin, clear and return
+    const localAdmin = localStorage.getItem('smartCampusLocalAdmin') === '1'
+    if (localAdmin) {
+      localStorage.removeItem('smartCampusLocalAdmin')
+      localStorage.removeItem('smartCampusLocalAdminUser')
+      localStorage.removeItem('smartCampusRole')
+      setUser(null)
+      setProfile(null)
+      return { ok: true }
+    }
+
+    try {
+      const res = await fetch('http://localhost:8080/api/user/profile', {
+        method: 'DELETE',
+        credentials: 'include'
+      })
+      if (res.status === 204) {
+        setUser(null)
+        setProfile(null)
+        localStorage.removeItem('smartCampusRole')
+        return { ok: true }
+      }
+      const errText = await res.text()
+      return { ok: false, message: errText }
+    } catch (e) {
+      return { ok: false, message: e.message }
+    }
+  }
+
   return (
     <AuthContext.Provider value={{ user, profile, loading, reload: load, logout, loginLocal, updateProfile }}>
       {children}

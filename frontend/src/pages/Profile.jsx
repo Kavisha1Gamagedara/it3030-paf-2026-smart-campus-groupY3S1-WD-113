@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react'
 import { useAuth } from '../auth/AuthContext'
+import { useNavigate } from 'react-router-dom'
 
 export default function Profile() {
-  const { user, profile, loading, updateProfile } = useAuth() || {}
+  const { user, profile, loading, updateProfile, deleteProfile } = useAuth() || {}
+  const navigate = useNavigate()
   const [form, setForm] = useState({})
   const [status, setStatus] = useState({})
 
@@ -23,6 +25,22 @@ export default function Profile() {
       setTimeout(() => setStatus({}), 2000)
     } else {
       setStatus({ error: (res && res.message) || 'Failed to save' })
+    }
+  }
+
+  const handleDelete = async () => {
+    const ok = window.confirm('Delete your account? This cannot be undone.')
+    if (!ok) return
+    setStatus({ deleting: true })
+    const res = await deleteProfile()
+    if (res && res.ok) {
+      setStatus({ deleted: true })
+      // navigate home after short delay
+      setTimeout(() => {
+        navigate('/', { replace: true })
+      }, 700)
+    } else {
+      setStatus({ error: (res && res.message) || 'Failed to delete' })
     }
   }
 
@@ -53,6 +71,12 @@ export default function Profile() {
             {status.saving && <span style={{ marginLeft: 8 }}>Saving...</span>}
             {status.saved && <span style={{ marginLeft: 8, color: 'green' }}>Saved</span>}
             {status.error && <span style={{ marginLeft: 8, color: 'red' }}>{status.error}</span>}
+          </div>
+
+          <div style={{ marginTop: 14 }}>
+            <button type="button" className="btn btn-outline" onClick={handleDelete}>Delete account</button>
+            {status.deleting && <span style={{ marginLeft: 8 }}>Deleting...</span>}
+            {status.deleted && <span style={{ marginLeft: 8, color: 'green' }}>Account deleted</span>}
           </div>
         </form>
       </div>

@@ -80,4 +80,11 @@ public class UserProfileService {
         profile.setUpdatedAt(Instant.now());
         return Optional.of(repository.save(profile));
     }
+
+    public boolean deleteProfile(String provider, String providerId) {
+        Optional<UserProfile> existing = repository.findByProviderAndProviderId(provider, providerId);
+        if (existing.isEmpty()) return false;
+        repository.delete(existing.get());
+        return true;
+    }
 }
