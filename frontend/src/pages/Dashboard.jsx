@@ -1,34 +1,51 @@
 import React, { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
+import LogoutButton from '../components/LogoutButton'
+import { useAuth } from '../auth/AuthContext'
 
 export default function Dashboard() {
-  const [user, setUser] = useState(null)
-  const [profile, setProfile] = useState(null)
-  const [loading, setLoading] = useState(true)
+  const { user: authUser, profile: authProfile, loading, reload } = useAuth() || {}
+  const [updatingRole, setUpdatingRole] = useState(false)
+  const navigate = useNavigate()
+
+  const loggedIn = authUser && (authUser.sub || authUser.id)
 
   useEffect(() => {
-    const loadUser = async () => {
-      try {
-        const userRes = await fetch('http://localhost:8080/api/user', { credentials: 'include' })
-        const userJson = await userRes.json()
-        setUser(userJson)
+    const syncRole = async () => {
+      if (loading || !loggedIn || updatingRole) return
 
-        if (userJson && userJson.sub) {
-          const profileRes = await fetch('http://localhost:8080/api/user/profile', { credentials: 'include' })
-          if (profileRes.ok) {
-            const profileJson = await profileRes.json()
-            setProfile(profileJson)
-          }
+      const storedRole = localStorage.getItem('smartCampusRole')
+      if (!storedRole || (authProfile && storedRole === authProfile.role)) return
+
+      try {
+        setUpdatingRole(true)
+        const res = await fetch('http://localhost:8080/api/user/role', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ role: storedRole })
+        })
+
+        if (res.ok) {
+          // refresh profile from auth provider
+          if (reload) await reload()
         }
-      } catch (error) {
-        setUser(null)
       } finally {
-        setLoading(false)
+        setUpdatingRole(false)
       }
     }
 
-    loadUser()
-  }, [])
+    syncRole()
+  }, [loading, loggedIn, authProfile, updatingRole, reload])
+
+  useEffect(() => {
+    if (!loading && loggedIn) {
+      const role = (authProfile && authProfile.role) || localStorage.getItem('smartCampusRole') || 'USER'
+      navigate(`/dashboard/${role.toLowerCase()}`, { replace: true })
+    }
+  }, [loading, loggedIn, authProfile, navigate])
+
+  const displayRole = (authProfile && authProfile.role) || localStorage.getItem('smartCampusRole') || 'USER'
 
   if (loading) {
     return (
@@ -40,8 +57,6 @@ export default function Dashboard() {
       </main>
     )
   }
-
-  const loggedIn = user && user.sub
 
   return (
     <main className="page">
@@ -56,14 +71,19 @@ export default function Dashboard() {
 
         {loggedIn && (
           <div>
-            <p className="status-ok">Signed in as {user.name || user.email}</p>
-            {profile && (
+            <p className="status-ok">Signed in as {authUser.name || authUser.email}</p>
+            <div className="role-row" style={{ marginTop: 12 }}>
+              <span className="helper">Role: {displayRole.replace('_', ' ')}</span>
+              <LogoutButton className="btn btn-outline">Logout</LogoutButton>
+            </div>
+            {authProfile && (
               <div className="card" style={{ marginTop: 16 }}>
                 <h4 style={{ marginTop: 0 }}>MongoDB Profile</h4>
-                <p className="helper">Name: {profile.name || '-'}</p>
-                <p className="helper">Email: {profile.email || '-'}</p>
-                <p className="helper">Provider: {profile.provider || '-'}</p>
-                <p className="helper">Updated: {profile.updatedAt || '-'}</p>
+                <p className="helper">Name: {authProfile.name || '-'}</p>
+                <p className="helper">Email: {authProfile.email || '-'}</p>
+                <p className="helper">Role: {authProfile.role || '-'}</p>
+                <p className="helper">Provider: {authProfile.provider || '-'}</p>
+                <p className="helper">Updated: {authProfile.updatedAt || '-'}</p>
               </div>
             )}
           </div>

@@ -16,6 +16,7 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import jakarta.servlet.http.HttpServletResponse;
 
 import com.smartcampus.security.CustomOAuth2UserService;
 import com.smartcampus.security.CustomOidcUserService;
@@ -44,7 +45,11 @@ public class SecurityConfig {
                 .cors(Customizer.withDefaults())
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
-                    .requestMatchers("/", "/index.html", "/api/public", "/api/auth/status", "/oauth2/**", "/login/**", "/api/user").permitAll()
+                    .requestMatchers("/admin/**").hasRole("ADMIN")
+                    .requestMatchers("/student/**").hasRole("STUDENT")
+                    .requestMatchers("/technician/**").hasRole("TECHNICIAN")
+                    .requestMatchers("/manager/**").hasRole("MANAGER")
+                    .requestMatchers("/", "/index.html", "/api/public", "/api/auth/status", "/api/auth/logout", "/oauth2/**", "/login/**", "/api/user").permitAll()
                     .anyRequest().authenticated()
                 )
                 .oauth2Login(oauth2 -> oauth2
@@ -53,6 +58,15 @@ public class SecurityConfig {
                         .oidcUserService(customOidcUserService)
                     )
                     .defaultSuccessUrl(dashboardUrl(), true)
+                )
+                .logout(logout -> logout
+                    .logoutUrl("/api/auth/logout")
+                    .logoutSuccessHandler((request, response, authentication) ->
+                        response.setStatus(HttpServletResponse.SC_NO_CONTENT)
+                    )
+                    .invalidateHttpSession(true)
+                    .clearAuthentication(true)
+                    .deleteCookies("JSESSIONID")
                 );
         } else {
             http
