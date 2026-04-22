@@ -11,6 +11,9 @@ export default function Login() {
   const [selectedRole, setSelectedRole] = useState('USER')
 
   const roleOptions = status.roles || ['USER', 'ADMIN', 'STUDENT', 'TECHNICIAN', 'MANAGER']
+  const [adminUser, setAdminUser] = useState('')
+  const [adminPass, setAdminPass] = useState('')
+  const [adminError, setAdminError] = useState('')
 
   useEffect(() => {
     const loadStatus = async () => {
@@ -55,6 +58,26 @@ export default function Login() {
     window.location.href = target
   }
 
+  const handleLocalAdmin = async (e) => {
+    e.preventDefault()
+    setAdminError('')
+    if (!adminUser || !adminPass) {
+      setAdminError('Enter username and password')
+      return
+    }
+    if (!auth || !auth.loginLocal) {
+      setAdminError('Local login unavailable')
+      return
+    }
+    const res = await auth.loginLocal(adminUser, adminPass, 'ADMIN')
+    if (res && res.ok) {
+      localStorage.setItem('smartCampusRole', 'ADMIN')
+      navigate('/dashboard/admin', { replace: true })
+    } else {
+      setAdminError(res && res.message ? res.message : 'Login failed')
+    }
+  }
+
   return (
     <main className="page">
       <div className="login-card">
@@ -76,12 +99,45 @@ export default function Login() {
                 </button>
               ))}
             </div>
-            <button className="btn btn-primary" style={{ marginTop: 16 }} onClick={handleLogin}>
-              Continue as {selectedRole.replace('_', ' ')}
-            </button>
-            <p className="helper" style={{ marginTop: 12 }}>
-              You will sign in with Google and land in the {selectedRole.replace('_', ' ').toLowerCase()} dashboard.
-            </p>
+            {/* If ADMIN selected, show local admin form instead of Google */}
+            {selectedRole === 'ADMIN' ? (
+              <div style={{ marginTop: 12 }}>
+                <h3>Local admin login</h3>
+                <p className="helper">Enter local admin credentials (development only).</p>
+                <form onSubmit={handleLocalAdmin}>
+                  <div style={{ marginTop: 8 }}>
+                    <input
+                      value={adminUser}
+                      onChange={(e) => setAdminUser(e.target.value)}
+                      placeholder="username"
+                      className="search-input"
+                    />
+                  </div>
+                  <div style={{ marginTop: 8 }}>
+                    <input
+                      value={adminPass}
+                      onChange={(e) => setAdminPass(e.target.value)}
+                      placeholder="password"
+                      type="password"
+                      className="search-input"
+                    />
+                  </div>
+                  {adminError && <p className="status-warn">{adminError}</p>}
+                  <div style={{ marginTop: 10 }}>
+                    <button type="submit" className="btn btn-primary">Sign in as admin</button>
+                  </div>
+                </form>
+              </div>
+            ) : (
+              <>
+                <button className="btn btn-primary" style={{ marginTop: 16 }} onClick={handleLogin}>
+                  Continue as {selectedRole.replace('_', ' ')}
+                </button>
+                <p className="helper" style={{ marginTop: 12 }}>
+                  You will sign in with Google and land in the {selectedRole.replace('_', ' ').toLowerCase()} dashboard.
+                </p>
+              </>
+            )}
           </div>
         ) : (
           <div>
@@ -90,6 +146,32 @@ export default function Login() {
               Set <code>GOOGLE_CLIENT_ID</code> and <code>GOOGLE_CLIENT_SECRET</code> in your environment.
             </p>
             {status.error && <p className="helper">{status.error}</p>}
+            <hr style={{ margin: '18px 0' }} />
+            <h3>Local admin login</h3>
+            <p className="helper">Use local admin credentials for development.</p>
+            <form onSubmit={handleLocalAdmin}>
+              <div style={{ marginTop: 8 }}>
+                <input
+                  value={adminUser}
+                  onChange={(e) => setAdminUser(e.target.value)}
+                  placeholder="username"
+                  className="search-input"
+                />
+              </div>
+              <div style={{ marginTop: 8 }}>
+                <input
+                  value={adminPass}
+                  onChange={(e) => setAdminPass(e.target.value)}
+                  placeholder="password"
+                  type="password"
+                  className="search-input"
+                />
+              </div>
+              {adminError && <p className="status-warn">{adminError}</p>}
+              <div style={{ marginTop: 10 }}>
+                <button type="submit" className="btn btn-primary">Sign in as admin</button>
+              </div>
+            </form>
           </div>
         )}
       </div>

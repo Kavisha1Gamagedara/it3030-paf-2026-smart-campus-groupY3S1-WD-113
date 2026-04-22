@@ -12,6 +12,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.smartcampus.model.UserProfile;
@@ -56,6 +57,22 @@ public class AuthController {
         if (principal == null) return null;
         String providerId = resolveProviderId(principal);
         return userProfileService.findByProviderAndProviderId("google", providerId).orElse(null);
+    }
+
+    @PutMapping("/api/user/profile")
+    public ResponseEntity<?> updateProfile(
+            @AuthenticationPrincipal OAuth2User principal,
+            @RequestBody Map<String, Object> payload
+    ) {
+        if (principal == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("message", "Not authenticated"));
+        }
+
+        String providerId = resolveProviderId(principal);
+        return userProfileService
+                .updateProfile("google", providerId, payload)
+                .<ResponseEntity<?>>map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("message", "Profile not found")));
     }
 
     @PostMapping("/api/user/role")

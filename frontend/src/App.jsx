@@ -8,6 +8,7 @@ import DashboardUser from './pages/DashboardUser'
 import DashboardStudent from './pages/DashboardStudent'
 import DashboardTechnician from './pages/DashboardTechnician'
 import DashboardManager from './pages/DashboardManager'
+import Profile from './pages/Profile'
 import { AuthProvider, useAuth } from './auth/AuthContext'
 import RequireAuth from './auth/RequireAuth'
 
@@ -41,6 +42,7 @@ export default function App() {
           <Route path="/dashboard/student" element={<RequireAuth><DashboardStudent /></RequireAuth>} />
           <Route path="/dashboard/technician" element={<RequireAuth><DashboardTechnician /></RequireAuth>} />
           <Route path="/dashboard/manager" element={<RequireAuth><DashboardManager /></RequireAuth>} />
+          <Route path="/profile" element={<RequireAuth><Profile /></RequireAuth>} />
         </Routes>
       </BrowserRouter>
     </AuthProvider>
