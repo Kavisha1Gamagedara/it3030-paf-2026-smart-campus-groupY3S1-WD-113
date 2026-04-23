@@ -3,7 +3,7 @@ import { useAuth } from '../auth/AuthContext'
 import { Link } from 'react-router-dom'
 import LogoutButton from './LogoutButton'
 
-export default function DashboardShell({ title = 'Dashboard', roleLabel = 'User' }) {
+export default function DashboardShell({ title = 'Dashboard', roleLabel = 'User', children }) {
   const { user, profile } = useAuth() || {}
   const displayName =
     (profile && profile.name) ||
@@ -101,7 +101,7 @@ export default function DashboardShell({ title = 'Dashboard', roleLabel = 'User'
           </header>
 
           <section className="dashboard-content">
-            {/* Quick Access and Current Courses sections removed per request */}
+            {children}
           </section>
         </section>
 
