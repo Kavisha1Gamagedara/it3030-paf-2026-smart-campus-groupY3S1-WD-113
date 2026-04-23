@@ -1,10 +1,12 @@
 package com.smartcampus.service;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
 import org.springframework.stereotype.Service;
+import org.springframework.data.domain.Sort;
 
 import com.smartcampus.model.UserProfile;
 import com.smartcampus.repository.UserProfileRepository;
@@ -79,5 +81,46 @@ public class UserProfileService {
         }
         profile.setUpdatedAt(Instant.now());
         return Optional.of(repository.save(profile));
+    }
+
+    public List<UserProfile> listAllProfiles() {
+        return repository.findAll(Sort.by(Sort.Direction.DESC, "updatedAt"));
+    }
+
+    public Optional<UserProfile> updateProfileById(String id, Map<String, Object> updates) {
+        Optional<UserProfile> existing = repository.findById(id);
+        if (existing.isEmpty()) {
+            return Optional.empty();
+        }
+
+        UserProfile profile = existing.get();
+        if (updates.containsKey("name")) {
+            profile.setName((String) updates.get("name"));
+        }
+        if (updates.containsKey("email")) {
+            profile.setEmail((String) updates.get("email"));
+        }
+        if (updates.containsKey("picture")) {
+            profile.setPicture((String) updates.get("picture"));
+        }
+        if (updates.containsKey("role")) {
+            profile.setRole((String) updates.get("role"));
+        }
+        profile.setUpdatedAt(Instant.now());
+        return Optional.of(repository.save(profile));
+    }
+
+    public boolean deleteProfileById(String id) {
+        Optional<UserProfile> existing = repository.findById(id);
+        if (existing.isEmpty()) return false;
+        repository.delete(existing.get());
+        return true;
+    }
+
+    public boolean deleteProfile(String provider, String providerId) {
+        Optional<UserProfile> existing = repository.findByProviderAndProviderId(provider, providerId);
+        if (existing.isEmpty()) return false;
+        repository.delete(existing.get());
+        return true;
     }
 }

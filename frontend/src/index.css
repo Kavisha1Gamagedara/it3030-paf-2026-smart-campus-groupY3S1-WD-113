@@ -480,6 +480,22 @@ a {
 	background: #f1f6fd;
 }
 
+.table-actions {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+	align-items: center;
+}
+
+.inline-input {
+	width: 100%;
+	min-width: 120px;
+	border-radius: 10px;
+	border: 1px solid var(--border);
+	padding: 8px 10px;
+	background: #fff;
+}
+
 .dashboard-panel .panel-header {
 	display: flex;
 	justify-content: space-between;

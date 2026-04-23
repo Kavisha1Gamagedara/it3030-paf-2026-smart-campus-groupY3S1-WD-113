@@ -9,21 +9,10 @@ export function AuthProvider({ children }) {
 
   const load = async () => {
     setLoading(true)
-    // If a local admin session was created, restore it from localStorage
-    const localAdmin = localStorage.getItem('smartCampusLocalAdmin') === '1'
-    if (localAdmin) {
-      const uname = localStorage.getItem('smartCampusLocalAdminUser') || 'admin'
-      const fakeUser = { name: uname, email: `${uname}@local`, sub: 'local-admin' }
-      const fakeProfile = { name: uname, email: `${uname}@local`, role: 'ADMIN', provider: 'local', updatedAt: new Date().toISOString() }
-      setUser(fakeUser)
-      setProfile(fakeProfile)
-      setLoading(false)
-      return
-    }
-
+    let userJson = null
     try {
       const res = await fetch('http://localhost:8080/api/user', { credentials: 'include' })
-      const userJson = await res.json()
+      userJson = await res.json()
       setUser(userJson && Object.keys(userJson).length ? userJson : null)
 
       if (userJson && (userJson.sub || userJson.id)) {
@@ -40,9 +29,18 @@ export function AuthProvider({ children }) {
     } catch (e) {
       setUser(null)
       setProfile(null)
-    } finally {
-      setLoading(false)
     }
+
+    const localAdmin = localStorage.getItem('smartCampusLocalAdmin') === '1'
+    if ((!userJson || !Object.keys(userJson || {}).length) && localAdmin) {
+      const uname = localStorage.getItem('smartCampusLocalAdminUser') || 'admin'
+      const fakeUser = { name: uname, email: `${uname}@local`, sub: 'local-admin' }
+      const fakeProfile = { name: uname, email: `${uname}@local`, role: 'ADMIN', provider: 'local', updatedAt: new Date().toISOString() }
+      setUser(fakeUser)
+      setProfile(fakeProfile)
+    }
+
+    setLoading(false)
   }
 
   useEffect(() => {
@@ -64,29 +62,27 @@ export function AuthProvider({ children }) {
   }
 
   const loginLocal = async (username, password, role = 'ADMIN') => {
-    const adminUser = import.meta.env.VITE_ADMIN_USERNAME || 'admin'
-    const adminPass = import.meta.env.VITE_ADMIN_PASSWORD || 'admin123'
-    if (username === adminUser && password === adminPass) {
-      // persist simple local admin session
+    try {
+      const res = await fetch('http://localhost:8080/api/auth/local/login', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password, role })
+      })
+      if (!res.ok) {
+        const msg = await res.text()
+        return { ok: false, message: msg || 'Invalid credentials' }
+      }
       localStorage.setItem('smartCampusLocalAdmin', '1')
       localStorage.setItem('smartCampusLocalAdminUser', username)
-      const fakeUser = { name: username, email: `${username}@local`, sub: 'local-admin' }
-      const fakeProfile = { name: username, email: `${username}@local`, role, provider: 'local', updatedAt: new Date().toISOString() }
-      setUser(fakeUser)
-      setProfile(fakeProfile)
+      await load()
       return { ok: true }
+    } catch (e) {
+      return { ok: false, message: e.message || 'Login failed' }
     }
-    return { ok: false, message: 'Invalid credentials' }
   }
 
   const updateProfile = async (updates) => {
-    // If local admin, update locally
-    const localAdmin = localStorage.getItem('smartCampusLocalAdmin') === '1'
-    if (localAdmin) {
-      setProfile((p) => ({ ...(p || {}), ...updates, updatedAt: new Date().toISOString() }))
-      return { ok: true }
-    }
-
     try {
       const res = await fetch('http://localhost:8080/api/user/profile', {
         method: 'PUT',
@@ -106,8 +102,29 @@ export function AuthProvider({ children }) {
     }
   }
 
+  const deleteProfile = async () => {
+    try {
+      const res = await fetch('http://localhost:8080/api/user/profile', {
+        method: 'DELETE',
+        credentials: 'include'
+      })
+      if (res.status === 204) {
+        setUser(null)
+        setProfile(null)
+        localStorage.removeItem('smartCampusRole')
+        localStorage.removeItem('smartCampusLocalAdmin')
+        localStorage.removeItem('smartCampusLocalAdminUser')
+        return { ok: true }
+      }
+      const errText = await res.text()
+      return { ok: false, message: errText }
+    } catch (e) {
+      return { ok: false, message: e.message }
+    }
+  }
+
   return (
-    <AuthContext.Provider value={{ user, profile, loading, reload: load, logout, loginLocal, updateProfile }}>
+    <AuthContext.Provider value={{ user, profile, loading, reload: load, logout, loginLocal, updateProfile, deleteProfile }}>
       {children}
     </AuthContext.Provider>
   )

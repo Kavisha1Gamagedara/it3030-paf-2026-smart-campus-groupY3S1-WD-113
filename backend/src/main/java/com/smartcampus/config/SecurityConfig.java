@@ -13,6 +13,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -20,6 +21,7 @@ import jakarta.servlet.http.HttpServletResponse;
 
 import com.smartcampus.security.CustomOAuth2UserService;
 import com.smartcampus.security.CustomOidcUserService;
+import com.smartcampus.security.LocalAdminAuthFilter;
 
 @Configuration
 @EnableWebSecurity
@@ -33,6 +35,9 @@ public class SecurityConfig {
 
     @Autowired
     private CustomOidcUserService customOidcUserService;
+
+    @Autowired
+    private LocalAdminAuthFilter localAdminAuthFilter;
 
     @Value("${FRONTEND_URL:http://localhost:5173}")
     private String frontendUrl;
@@ -49,9 +54,10 @@ public class SecurityConfig {
                     .requestMatchers("/student/**").hasRole("STUDENT")
                     .requestMatchers("/technician/**").hasRole("TECHNICIAN")
                     .requestMatchers("/manager/**").hasRole("MANAGER")
-                    .requestMatchers("/", "/index.html", "/api/public", "/api/auth/status", "/api/auth/logout", "/oauth2/**", "/login/**", "/api/user").permitAll()
+                    .requestMatchers("/", "/index.html", "/api/public", "/api/auth/status", "/api/auth/logout", "/api/auth/local/login", "/oauth2/**", "/login/**", "/api/user").permitAll()
                     .anyRequest().authenticated()
                 )
+                .addFilterBefore(localAdminAuthFilter, UsernamePasswordAuthenticationFilter.class)
                 .oauth2Login(oauth2 -> oauth2
                     .userInfoEndpoint(userInfo -> userInfo
                         .userService(customOAuth2UserService)
