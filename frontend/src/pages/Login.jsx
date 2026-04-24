@@ -18,7 +18,7 @@ export default function Login() {
   useEffect(() => {
     const loadStatus = async () => {
       try {
-        const res = await fetch('http://localhost:8080/api/auth/status', { credentials: 'include' })
+        const res = await fetch('http://localhost:8081/api/auth/status', { credentials: 'include' })
         const json = await res.json()
         setStatus(json)
       } catch (error) {
@@ -54,7 +54,7 @@ export default function Login() {
 
   const handleLogin = () => {
     localStorage.setItem('smartCampusRole', selectedRole)
-    const target = `http://localhost:8080${status.authorizationUrl || '/oauth2/authorization/google'}`
+    const target = `http://localhost:8081${status.authorizationUrl || '/oauth2/authorization/google'}`
     window.location.href = target
   }
 

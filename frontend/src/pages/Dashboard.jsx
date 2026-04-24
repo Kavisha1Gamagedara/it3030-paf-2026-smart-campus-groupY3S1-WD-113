@@ -19,7 +19,7 @@ export default function Dashboard() {
 
       try {
         setUpdatingRole(true)
-        const res = await fetch('http://localhost:8080/api/user/role', {
+        const res = await fetch('http://localhost:8081/api/user/role', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           credentials: 'include',

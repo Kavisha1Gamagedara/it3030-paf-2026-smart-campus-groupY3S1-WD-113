@@ -11,12 +11,12 @@ export function AuthProvider({ children }) {
     setLoading(true)
     let userJson = null
     try {
-      const res = await fetch('http://localhost:8080/api/user', { credentials: 'include' })
+      const res = await fetch('http://localhost:8081/api/user', { credentials: 'include' })
       userJson = await res.json()
       setUser(userJson && Object.keys(userJson).length ? userJson : null)
 
       if (userJson && (userJson.sub || userJson.id)) {
-        const profileRes = await fetch('http://localhost:8080/api/user/profile', { credentials: 'include' })
+        const profileRes = await fetch('http://localhost:8081/api/user/profile', { credentials: 'include' })
         if (profileRes.ok) {
           const p = await profileRes.json()
           setProfile(p)
@@ -49,7 +49,7 @@ export function AuthProvider({ children }) {
 
   const logout = async () => {
     try {
-      await fetch('http://localhost:8080/api/auth/logout', { method: 'POST', credentials: 'include' })
+      await fetch('http://localhost:8081/api/auth/logout', { method: 'POST', credentials: 'include' })
     } catch (e) {
       // ignore
     }
@@ -63,7 +63,7 @@ export function AuthProvider({ children }) {
 
   const loginLocal = async (username, password, role = 'ADMIN') => {
     try {
-      const res = await fetch('http://localhost:8080/api/auth/local/login', {
+      const res = await fetch('http://localhost:8081/api/auth/local/login', {
         method: 'POST',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
@@ -84,7 +84,7 @@ export function AuthProvider({ children }) {
 
   const updateProfile = async (updates) => {
     try {
-      const res = await fetch('http://localhost:8080/api/user/profile', {
+      const res = await fetch('http://localhost:8081/api/user/profile', {
         method: 'PUT',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
@@ -104,7 +104,7 @@ export function AuthProvider({ children }) {
 
   const deleteProfile = async () => {
     try {
-      const res = await fetch('http://localhost:8080/api/user/profile', {
+      const res = await fetch('http://localhost:8081/api/user/profile', {
         method: 'DELETE',
         credentials: 'include'
       })
