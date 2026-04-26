@@ -25,9 +25,7 @@
 }
 
 
-html,
-body,
-#root {
+html, body, #root {
 	height: 100%;
 	margin: 0;
 	font-family: 'Space Grotesk', 'Segoe UI', sans-serif;
@@ -614,15 +612,8 @@ a {
 }
 
 @keyframes fadeIn {
-	from {
-		opacity: 0;
-		transform: translateY(10px);
-	}
-
-	to {
-		opacity: 1;
-		transform: translateY(0);
-	}
+	from { opacity: 0; transform: translateY(10px); }
+	to { opacity: 1; transform: translateY(0); }
 }
 
 .hover-lift {
@@ -631,7 +622,7 @@ a {
 
 .hover-lift:hover {
 	transform: translateY(-4px);
-	box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1);
+	box-shadow: 0 12px 24px rgba(0,0,0,0.1);
 }
 
 .pulse {
@@ -639,17 +630,9 @@ a {
 }
 
 @keyframes pulse {
-	0% {
-		transform: scale(1);
-	}
-
-	50% {
-		transform: scale(1.05);
-	}
-
-	100% {
-		transform: scale(1);
-	}
+	0% { transform: scale(1); }
+	50% { transform: scale(1.05); }
+	100% { transform: scale(1); }
 }
 
 .resource-card {
@@ -714,10 +697,7 @@ a {
 
 .modal-backdrop {
 	position: fixed;
-	top: 0;
-	left: 0;
-	right: 0;
-	bottom: 0;
+	top: 0; left: 0; right: 0; bottom: 0;
 	background: rgba(15, 23, 42, 0.4);
 	backdrop-filter: blur(8px);
 	display: flex;
@@ -740,15 +720,8 @@ a {
 }
 
 @keyframes modalSlideUp {
-	from {
-		opacity: 0;
-		transform: translateY(20px) scale(0.95);
-	}
-
-	to {
-		opacity: 1;
-		transform: translateY(0) scale(1);
-	}
+	from { opacity: 0; transform: translateY(20px) scale(0.95); }
+	to { opacity: 1; transform: translateY(0) scale(1); }
 }
 
 .input-group {
@@ -786,7 +759,7 @@ a {
 	display: flex;
 	justify-content: space-between;
 	align-items: center;
-	box-shadow: 0 2px 10px rgba(0, 0, 0, 0.02);
+	box-shadow: 0 2px 10px rgba(0,0,0,0.02);
 }
 
 .hub-logo-section {
@@ -887,7 +860,7 @@ a {
 	display: flex;
 	gap: 16px;
 	align-items: center;
-	box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+	box-shadow: 0 4px 20px rgba(0,0,0,0.03);
 	border: 1px solid #f1f5f9;
 }
 
@@ -931,13 +904,8 @@ a {
 	border-bottom: 1px solid #f1f5f9;
 }
 
-.hub-table th:first-child {
-	border-top-left-radius: 12px;
-}
-
-.hub-table th:last-child {
-	border-top-right-radius: 12px;
-}
+.hub-table th:first-child { border-top-left-radius: 12px; }
+.hub-table th:last-child { border-top-right-radius: 12px; }
 
 .hub-table td {
 	padding: 16px;
@@ -959,7 +927,7 @@ a {
 
 .hub-card:hover {
 	transform: translateY(-5px);
-	box-shadow: 0 20px 40px rgba(0, 0, 0, 0.04);
+	box-shadow: 0 20px 40px rgba(0,0,0,0.04);
 }
 
 .hub-card-icon {
@@ -981,20 +949,9 @@ a {
 	text-transform: uppercase;
 }
 
-.hub-badge-active {
-	background: #dcfce7;
-	color: #166534;
-}
-
-.hub-badge-maintenance {
-	background: #fef3c7;
-	color: #92400e;
-}
-
-.hub-badge-oos {
-	background: #fee2e2;
-	color: #991b1b;
-}
+.hub-badge-active { background: #dcfce7; color: #166534; }
+.hub-badge-maintenance { background: #fef3c7; color: #92400e; }
+.hub-badge-oos { background: #fee2e2; color: #991b1b; }
 
 .hub-btn-danger {
 	background: var(--danger-gradient);
