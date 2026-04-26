@@ -30,7 +30,7 @@ export default function DashboardAdmin() {
     setLoading(true)
     setError('')
     try {
-      const res = await fetch('http://localhost:8080/admin/api/users', { credentials: 'include' })
+      const res = await fetch('http://localhost:8081/admin/api/users', { credentials: 'include' })
       if (!res.ok) {
         const msg = await res.text()
         throw new Error(msg || 'Failed to load users')
@@ -77,7 +77,7 @@ export default function DashboardAdmin() {
     setSavingId(userId)
     setError('')
     try {
-      const res = await fetch(`http://localhost:8080/admin/api/users/${userId}`, {
+      const res = await fetch(`http://localhost:8081/admin/api/users/${userId}`, {
         method: 'PUT',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
@@ -103,7 +103,7 @@ export default function DashboardAdmin() {
     setDeletingId(userId)
     setError('')
     try {
-      const res = await fetch(`http://localhost:8080/admin/api/users/${userId}`, {
+      const res = await fetch(`http://localhost:8081/admin/api/users/${userId}`, {
         method: 'DELETE',
         credentials: 'include'
       })

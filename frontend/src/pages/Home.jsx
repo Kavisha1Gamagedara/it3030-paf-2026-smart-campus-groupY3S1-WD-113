@@ -14,7 +14,7 @@ export default function Home() {
           </p>
           <div className="cta-row">
             <Link to="/login"><button className="btn btn-primary">Get Started</button></Link>
-            <a href="http://localhost:8080/api/auth/status" target="_blank" rel="noreferrer">
+            <a href="http://localhost:8081/api/auth/status" target="_blank" rel="noreferrer">
               <button className="btn btn-outline">Auth Status</button>
             </a>
           </div>
