@@ -10,12 +10,12 @@ export default function Resources() {
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [editingResource, setEditingResource] = useState(null);
     const [resourceToDelete, setResourceToDelete] = useState(null);
-    
+
     // Search Filters
     const [searchType, setSearchType] = useState('');
     const [searchCapacity, setSearchCapacity] = useState('');
     const [searchLocation, setSearchLocation] = useState('');
-    
+
     const [formData, setFormData] = useState({
         name: '',
         type: 'LECTURE_HALL',
@@ -63,7 +63,7 @@ export default function Resources() {
             });
 
             if (!response.ok) throw new Error('Data sync failed');
-            
+
             setIsModalOpen(false);
             setEditingResource(null);
             setFormData({ name: '', type: 'LECTURE_HALL', capacity: 0, location: '', availabilityWindows: '08:00-17:00', status: 'ACTIVE', description: '' });
@@ -100,9 +100,9 @@ export default function Resources() {
             {/* 1. Header Replication */}
             <header className="hub-header">
                 <div className="hub-logo-section">
-                    <div className="hub-logo-icon">🏠</div>
+                    <div className="hub-logo-icon">🌐</div>
                     <div className="hub-logo-text">
-                        <h1>Smart Campus Operations Hub</h1>
+                        <h1>Smart Campus Portal</h1>
                     </div>
                 </div>
                 <div className="hub-user-section">
@@ -132,29 +132,26 @@ export default function Resources() {
                             Explore and book campus assets. From study rooms to lab equipment, everything is now at your fingertips through our smart portal.
                         </p>
                     </div>
-                    <button className="btn btn-outline" style={{ borderRadius: '999px', padding: '12px 24px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        📍 View on Map
-                    </button>
                 </div>
 
                 {/* 4. Search Bar Replication */}
                 <div className="hub-search-bar" style={{ marginBottom: '48px' }}>
-                    <input 
-                        className="hub-search-input" 
-                        placeholder="Type (e.g. Room)" 
+                    <input
+                        className="hub-search-input"
+                        placeholder="Type (e.g. Room)"
                         value={searchType}
                         onChange={(e) => setSearchType(e.target.value)}
                     />
-                    <input 
-                        className="hub-search-input" 
-                        placeholder="Capacity" 
+                    <input
+                        className="hub-search-input"
+                        placeholder="Capacity"
                         style={{ maxWidth: '120px' }}
                         value={searchCapacity}
                         onChange={(e) => setSearchCapacity(e.target.value)}
                     />
-                    <input 
-                        className="hub-search-input" 
-                        placeholder="Location" 
+                    <input
+                        className="hub-search-input"
+                        placeholder="Location"
                         value={searchLocation}
                         onChange={(e) => setSearchLocation(e.target.value)}
                     />
@@ -171,8 +168,8 @@ export default function Resources() {
                                 <span style={{ fontSize: '10px', color: '#94a3b8', fontWeight: '700', letterSpacing: '1px' }}>CONTROL PANEL</span>
                             </div>
                         </div>
-                        <button 
-                            className="hub-search-button" 
+                        <button
+                            className="hub-search-button"
                             style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
                             onClick={() => { setEditingResource(null); setIsModalOpen(true); }}
                         >
@@ -240,7 +237,7 @@ export default function Resources() {
                                 </div>
                                 <h3 style={{ fontSize: '20px', color: '#0f4c81', margin: '0 0 4px' }}>{res.name}</h3>
                                 <p style={{ color: '#46c1ce', fontSize: '12px', fontWeight: '700', textTransform: 'uppercase', marginBottom: '24px' }}>{res.type}</p>
-                                
+
                                 <div style={{ display: 'flex', gap: '12px' }}>
                                     <div style={{ flex: 1, background: '#f8fafc', padding: '12px', borderRadius: '16px' }}>
                                         <div style={{ color: '#94a3b8', fontSize: '10px', marginBottom: '4px' }}>👤</div>
@@ -265,7 +262,7 @@ export default function Resources() {
                             <h2 style={{ margin: 0, fontSize: '24px', color: '#0f4c81' }}>{editingResource ? 'Edit Resource' : 'Add New Resource'}</h2>
                             <p style={{ color: '#64748b', fontSize: '13px', marginTop: '4px' }}>Fill in the details below to register a new resource.</p>
                         </div>
-                        
+
                         <form onSubmit={handleSubmit}>
                             <div className="input-group">
                                 <label className="input-label" style={{ fontSize: '11px', textTransform: 'uppercase', color: '#0f4c81' }}>RESOURCE NAME</label>
@@ -284,7 +281,7 @@ export default function Resources() {
                                 </div>
                                 <div className="input-group">
                                     <label className="input-label" style={{ fontSize: '11px', textTransform: 'uppercase', color: '#0f4c81' }}>CAPACITY</label>
-                                    <input type="number" name="capacity" className="modern-input" value={formData.capacity} onChange={handleInputChange} required />
+                                    <input type="number" name="capacity" className="modern-input" min="0" value={formData.capacity} onChange={handleInputChange} required />
                                 </div>
                             </div>
 
@@ -334,7 +331,7 @@ export default function Resources() {
                         </div>
                         <h2 style={{ margin: '0 0 8px', fontSize: '18px', color: '#0f4c81', textTransform: 'uppercase', letterSpacing: '0.5px' }}>DELETE RESOURCE</h2>
                         <p style={{ color: '#ef4444', fontSize: '11px', fontWeight: '800', margin: '0 0 24px' }}>WARNING: THIS ACTION IS PERMANENT.</p>
-                        
+
                         <div style={{ background: '#f0fdfa', border: '1px solid #ccfbf1', padding: '16px', borderRadius: '12px', marginBottom: '24px', textAlign: 'left' }}>
                             <div style={{ fontWeight: '800', color: '#0f4c81', fontSize: '14px' }}>{resourceToDelete?.name}</div>
                             <div style={{ fontSize: '10px', color: '#46c1ce', fontWeight: '700' }}>{resourceToDelete?.type} • {resourceToDelete?.location}</div>
@@ -352,5 +349,14 @@ export default function Resources() {
                 </div>
             )}
         </div>
+    );
+}
+                            <button className="btn btn-outline hover-lift" style={{ flex: 1, border: 'none', background: '#f1f5f9', fontWeight: '700' }} onClick={() => setIsDeleteModalOpen(false)}>ABORT</button>
+                            <button className="hub-btn-danger hover-lift" style={{ flex: 1.5, fontSize: '14px', boxShadow: '0 8px 16px rgba(244, 63, 94, 0.2)' }} onClick={confirmDelete}>CONFIRM PURGE</button>
+                        </div >
+                    </div >
+                </div >
+            )}
+        </div >
     );
 }
