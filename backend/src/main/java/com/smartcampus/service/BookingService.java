@@ -55,48 +55,48 @@ public class BookingService {
     }
 
     private boolean checkOverlap(Booking newBooking) {
-        // Fetch the resource to get its total capacity
         Resource resource = resourceService.getResourceById(newBooking.getResourceId()).orElse(null);
         if (resource == null) return false;
 
-        // Fetch all active (Approved/Pending) bookings for this resource on the same date
-        List<Booking> existingBookings = bookingRepository.findByResourceIdAndDateAndStatusNot(
-                newBooking.getResourceId(), 
-                newBooking.getDate(), 
-                BookingStatus.REJECTED
-        );
-
-        // We need to check if the peak occupancy exceeds capacity during the NEW booking's time range
-        int newAttendees = (newBooking.getAttendeeCount() != null) ? newBooking.getAttendeeCount() : 1;
         int capacity = resource.getCapacity();
+        int newAttendees = (newBooking.getAttendeeCount() != null) ? newBooking.getAttendeeCount() : 1;
 
-        // Check every minute (or every start/end time) within the requested range
-        // A simple way is to check the occupancy at the start time of every overlapping booking
-        for (Booking b : existingBookings) {
-            if (b.getStatus() == BookingStatus.CANCELLED) continue;
+        // 1. Get all relevant bookings (Approved or Pending)
+        List<Booking> existing = bookingRepository.findByResourceIdAndDateAndStatusNot(
+                newBooking.getResourceId(), newBooking.getDate(), BookingStatus.REJECTED);
 
-            // Calculate occupancy at the moment this existing booking (or the new one) starts
-            int occupancyAtStart = getOccupancyAt(newBooking.getResourceId(), newBooking.getDate(), b.getStartTime(), existingBookings);
-            int occupancyAtNewStart = getOccupancyAt(newBooking.getResourceId(), newBooking.getDate(), newBooking.getStartTime(), existingBookings);
+        // 2. We only care about bookings that actually overlap with our new time range
+        List<Booking> overlaps = existing.stream()
+                .filter(b -> b.getStatus() != BookingStatus.CANCELLED)
+                .filter(b -> b.getStartTime().isBefore(newBooking.getEndTime()) && b.getEndTime().isAfter(newBooking.getStartTime()))
+                .toList();
 
-            if (occupancyAtStart + newAttendees > capacity && isTimeWithin(b.getStartTime(), newBooking)) return true;
-            if (occupancyAtNewStart + newAttendees > capacity) return true;
+        // 3. Check every "Change Point" (whenever a booking starts or ends)
+        // If the occupancy + our new attendees > capacity at any point, then it's a conflict.
+        java.util.Set<java.time.LocalTime> checkPoints = new java.util.HashSet<>();
+        checkPoints.add(newBooking.getStartTime());
+        for (Booking b : overlaps) {
+            checkPoints.add(b.getStartTime());
         }
 
-        // If no existing bookings, just check if the new booking itself exceeds capacity
+        for (java.time.LocalTime time : checkPoints) {
+            // Only check points that fall within our new booking's window
+            if (!time.isBefore(newBooking.getStartTime()) && time.isBefore(newBooking.getEndTime())) {
+                int occupancyAtTime = getOccupancyAt(time, overlaps);
+                if (occupancyAtTime + newAttendees > capacity) {
+                    return true;
+                }
+            }
+        }
+
         return newAttendees > capacity;
     }
 
-    private int getOccupancyAt(String resourceId, java.time.LocalDate date, java.time.LocalTime time, List<Booking> bookings) {
-        return bookings.stream()
-                .filter(b -> b.getStatus() != BookingStatus.CANCELLED)
+    private int getOccupancyAt(java.time.LocalTime time, List<Booking> overlaps) {
+        return overlaps.stream()
                 .filter(b -> !time.isBefore(b.getStartTime()) && time.isBefore(b.getEndTime()))
                 .mapToInt(b -> (b.getAttendeeCount() != null) ? b.getAttendeeCount() : 1)
                 .sum();
-    }
-
-    private boolean isTimeWithin(java.time.LocalTime time, Booking booking) {
-        return !time.isBefore(booking.getStartTime()) && time.isBefore(booking.getEndTime());
     }
 
     public List<Booking> getAllBookings() {
