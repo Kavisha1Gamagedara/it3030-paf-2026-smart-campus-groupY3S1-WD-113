@@ -6,6 +6,8 @@ import com.smartcampus.incident.repository.IncidentTicketRepository;
 import com.smartcampus.incident.model.TicketStatus;
 import org.springframework.stereotype.Service;
 
+import com.smartcampus.incident.model.TicketComment;
+
 import java.util.List;
 
 @Service
@@ -54,6 +56,29 @@ public class IncidentTicketService {
 
         if (resolutionNotes != null && !resolutionNotes.isBlank()) {
             ticket.setResolutionNotes(resolutionNotes);
+        }
+
+        return ticketRepository.save(ticket);
+    }
+
+    // Add comment
+    public IncidentTicket addComment(String ticketId, String userId, String content) {
+        IncidentTicket ticket = getTicketById(ticketId);
+        ticket.getComments().add(new TicketComment(userId, content));
+        return ticketRepository.save(ticket);
+    }
+
+    // Delete own comment
+    public IncidentTicket deleteComment(String ticketId, String commentId, String userId) {
+        IncidentTicket ticket = getTicketById(ticketId);
+
+        boolean removed = ticket.getComments().removeIf(
+                comment -> comment.getId().equals(commentId)
+                        && comment.getUserId().equals(userId)
+        );
+
+        if (!removed) {
+            throw new RuntimeException("Comment not found or not owned by user");
         }
 
         return ticketRepository.save(ticket);

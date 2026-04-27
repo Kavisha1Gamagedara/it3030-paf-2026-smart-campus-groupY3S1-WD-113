@@ -33,8 +33,11 @@ public class IncidentTicket {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
-    // Attachments (store file paths)
-    private List<String> attachmentPaths = new ArrayList<>();
+    // Attachments (MongoDB GridFS file IDs)
+    private List<String> attachmentFileIds = new ArrayList<>();
+
+    // Embedded comments
+    private List<TicketComment> comments = new ArrayList<>();
 
     // Constructors
     public IncidentTicket() {
@@ -141,11 +144,20 @@ public class IncidentTicket {
         return updatedAt;
     }
 
-    public List<String> getAttachmentPaths() {
-        return attachmentPaths;
+    // GridFS attachment IDs
+    public List<String> getAttachmentFileIds() {
+        return attachmentFileIds;
     }
 
-    public void setAttachmentPaths(List<String> attachmentPaths) {
-        this.attachmentPaths = attachmentPaths;
+    public void setAttachmentFileIds(List<String> attachmentFileIds) {
+        this.attachmentFileIds = attachmentFileIds;
+    }
+
+    public List<TicketComment> getComments() {
+        return comments;
+    }
+
+    public void setComments(List<TicketComment> comments) {
+        this.comments = comments;
     }
 }
