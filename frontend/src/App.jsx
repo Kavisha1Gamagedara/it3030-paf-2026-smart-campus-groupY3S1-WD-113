@@ -12,6 +12,9 @@ import Profile from './pages/Profile'
 import Resources from './pages/Resources'
 import { AuthProvider, useAuth } from './auth/AuthContext'
 import RequireAuth from './auth/RequireAuth'
+import MyIncidents from './pages/incidents/MyIncidents'
+import CreateIncident from './pages/incidents/CreateIncident'
+import IncidentDetails from './pages/incidents/IncidentDetails'
 
 export default function App() {
   const Nav = () => {
@@ -46,6 +49,9 @@ export default function App() {
           <Route path="/dashboard/manager" element={<RequireAuth><DashboardManager /></RequireAuth>} />
           <Route path="/profile" element={<RequireAuth><Profile /></RequireAuth>} />
           <Route path="/resources" element={<Resources />} />
+          <Route path="/incidents" element={<MyIncidents />} />
+          <Route path="/incidents/new" element={<CreateIncident />} />
+          <Route path="/incidents/:id" element={<IncidentDetails />} />
         </Routes>
       </BrowserRouter>
     </AuthProvider>

@@ -32,9 +32,7 @@ public class IncidentTicketController {
         this.attachmentStorageService = attachmentStorageService;
     }
 
-    // =========================
     // USER: Create ticket
-    // =========================
     @PostMapping
     public ResponseEntity<IncidentTicket> createTicket(
             @RequestBody CreateIncidentTicketRequest request,
@@ -55,9 +53,7 @@ public class IncidentTicketController {
         );
     }
 
-    // =========================
     // USER: Get own tickets
-    // =========================
     @GetMapping("/my")
     public ResponseEntity<List<IncidentTicket>> getMyTickets(Authentication authentication) {
         return ResponseEntity.ok(
@@ -65,17 +61,14 @@ public class IncidentTicketController {
         );
     }
 
-    // =========================
+
     // ALL: Get ticket by ID
-    // =========================
     @GetMapping("/{id}")
     public ResponseEntity<IncidentTicket> getById(@PathVariable String id) {
         return ResponseEntity.ok(ticketService.getTicketById(id));
     }
 
-    // =========================
     // ADMIN: Assign technician
-    // =========================
     @PatchMapping("/{id}/assign")
     public ResponseEntity<IncidentTicket> assignTechnician(
             @PathVariable String id,
@@ -86,9 +79,7 @@ public class IncidentTicketController {
         );
     }
 
-    // =========================
     // ADMIN / TECH: Update status
-    // =========================
     @PatchMapping("/{id}/status")
     public ResponseEntity<IncidentTicket> updateStatus(
             @PathVariable String id,
@@ -103,9 +94,7 @@ public class IncidentTicketController {
         );
     }
 
-    // =========================
     // USER / STAFF: Add comment
-    // =========================
     @PostMapping("/{id}/comments")
     public ResponseEntity<IncidentTicket> addComment(
             @PathVariable String id,
@@ -121,9 +110,7 @@ public class IncidentTicketController {
         );
     }
 
-    // =========================
     // USER / STAFF: Delete own comment
-    // =========================
     @DeleteMapping("/{ticketId}/comments/{commentId}")
     public ResponseEntity<IncidentTicket> deleteComment(
             @PathVariable String ticketId,
@@ -139,9 +126,7 @@ public class IncidentTicketController {
         );
     }
 
-    // =========================
     // USER: Upload attachments (GridFS, max 3)
-    // =========================
     @PostMapping("/{id}/attachments")
     public ResponseEntity<IncidentTicket> uploadAttachments(
             @PathVariable String id,

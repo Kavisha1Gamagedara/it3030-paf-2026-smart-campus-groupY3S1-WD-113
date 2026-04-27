@@ -36,7 +36,11 @@ export default function DashboardShell({ title = 'Dashboard', roleLabel = 'User'
                   <ul className="nav-list">
                     <li className="nav-item">Available facilities</li>
                     <li className="nav-item">Bookings</li>
-                    <li className="nav-item">Tickets</li>
+                    
+                    <li className="nav-item">
+                      <Link to="/incidents">Tickets</Link>
+                    </li>
+
                     <li className="nav-item">Notifications</li>
                   </ul>
                 )
