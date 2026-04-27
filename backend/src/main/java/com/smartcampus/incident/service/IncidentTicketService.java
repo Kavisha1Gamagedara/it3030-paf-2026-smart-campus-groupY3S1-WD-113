@@ -83,5 +83,12 @@ public class IncidentTicketService {
 
         return ticketRepository.save(ticket);
     }
+
+    public void deleteTicket(String ticketId) {
+    if (!ticketRepository.existsById(ticketId)) {
+        throw new TicketNotFoundException("Incident ticket not found");
+    }
+        ticketRepository.deleteById(ticketId);
+    }
 }
 
