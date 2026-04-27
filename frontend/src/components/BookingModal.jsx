@@ -23,6 +23,12 @@ export default function BookingModal({ resource, onClose, onSuccess }) {
         setLoading(true);
         setError('');
 
+        if (formData.endTime <= formData.startTime) {
+            setError('End time must be after the start time.');
+            setLoading(false);
+            return;
+        }
+
         const bookingPayload = {
             ...formData,
             resourceId: resource.id,

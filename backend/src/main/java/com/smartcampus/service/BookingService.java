@@ -34,6 +34,11 @@ public class BookingService {
             throw new RuntimeException("Expected number of attendees is required for this facility");
         }
 
+        // Validation: End time must be after Start time
+        if (booking.getEndTime().isBefore(booking.getStartTime()) || booking.getEndTime().equals(booking.getStartTime())) {
+            throw new RuntimeException("End time must be after the start time.");
+        }
+
         // 2. Prevent overlapping bookings
         boolean hasOverlap = checkOverlap(booking);
         if (hasOverlap) {
