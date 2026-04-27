@@ -1,13 +1,14 @@
 package com.smartcampus.service;
 
-import com.smartcampus.model.Resource;
-import com.smartcampus.model.ResourceType;
-import com.smartcampus.repository.ResourceRepository;
+import java.util.List;
+import java.util.Optional;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
-import java.util.Optional;
+import com.smartcampus.model.Resource;
+import com.smartcampus.model.ResourceType;
+import com.smartcampus.repository.ResourceRepository;
 
 @Service
 public class ResourceService {
@@ -19,7 +20,7 @@ public class ResourceService {
         return resourceRepository.findAll();
     }
 
-    public Optional<Resource> getResourceById(Long id) {
+    public Optional<Resource> getResourceById(String id) {
         return resourceRepository.findById(id);
     }
 
@@ -27,7 +28,7 @@ public class ResourceService {
         return resourceRepository.save(resource);
     }
 
-    public Resource updateResource(Long id, Resource resourceDetails) {
+    public Resource updateResource(String id, Resource resourceDetails) {
         Resource resource = resourceRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Resource not found with id: " + id));
 
@@ -42,7 +43,7 @@ public class ResourceService {
         return resourceRepository.save(resource);
     }
 
-    public void deleteResource(Long id) {
+    public void deleteResource(String id) {
         resourceRepository.deleteById(id);
     }
 

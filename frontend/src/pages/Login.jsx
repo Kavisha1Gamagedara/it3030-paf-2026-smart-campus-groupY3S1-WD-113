@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from 'react'
-import { useEffect as useEff, useState as useSt } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../auth/AuthContext'
 
@@ -18,7 +17,7 @@ export default function Login() {
   useEffect(() => {
     const loadStatus = async () => {
       try {
-        const res = await fetch('http://localhost:8081/api/auth/status', { credentials: 'include' })
+        const res = await fetch('/api/auth/status', { credentials: 'include' })
         const json = await res.json()
         setStatus(json)
       } catch (error) {
@@ -54,7 +53,7 @@ export default function Login() {
 
   const handleLogin = () => {
     localStorage.setItem('smartCampusRole', selectedRole)
-    const target = `http://localhost:8081${status.authorizationUrl || '/oauth2/authorization/google'}`
+    const target = `${status.authorizationUrl || '/oauth2/authorization/google'}`
     window.location.href = target
   }
 

@@ -1,20 +1,25 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import DashboardShell from '../components/DashboardShell'
+import AdminResourcesPanel from '../components/AdminResourcesPanel'
 import { useAuth } from '../auth/AuthContext'
 
-const ROLE_OPTIONS = ['USER', 'ADMIN', 'STUDENT', 'TECHNICIAN', 'MANAGER']
+const ROLE_OPTIONS = ['ADMIN', 'MANAGER', 'TECHNICIAN', 'STUDENT', 'USER']
 
-const formatDateTime = (value) => {
-  if (!value) return '-'
-  const d = new Date(value)
-  if (Number.isNaN(d.getTime())) return '-'
-  return d.toLocaleString()
+const formatDateTime = (iso) => {
+  if (!iso) return '-'
+  try {
+    const d = new Date(iso)
+    if (Number.isNaN(d.getTime())) return '-'
+    return d.toLocaleString()
+  } catch (e) {
+    return iso
+  }
 }
 
 export default function DashboardAdmin() {
   const { user, profile, loading: authLoading } = useAuth() || {}
   const [users, setUsers] = useState([])
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [editId, setEditId] = useState('')
   const [editForm, setEditForm] = useState({})
@@ -30,7 +35,7 @@ export default function DashboardAdmin() {
     setLoading(true)
     setError('')
     try {
-      const res = await fetch('http://localhost:8081/admin/api/users', { credentials: 'include' })
+      const res = await fetch('/admin/api/users', { credentials: 'include' })
       if (!res.ok) {
         const msg = await res.text()
         throw new Error(msg || 'Failed to load users')
@@ -77,7 +82,7 @@ export default function DashboardAdmin() {
     setSavingId(userId)
     setError('')
     try {
-      const res = await fetch(`http://localhost:8081/admin/api/users/${userId}`, {
+      const res = await fetch(`/admin/api/users/${userId}`, {
         method: 'PUT',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
@@ -103,7 +108,7 @@ export default function DashboardAdmin() {
     setDeletingId(userId)
     setError('')
     try {
-      const res = await fetch(`http://localhost:8081/admin/api/users/${userId}`, {
+      const res = await fetch(`/admin/api/users/${userId}`, {
         method: 'DELETE',
         credentials: 'include'
       })
@@ -250,6 +255,7 @@ export default function DashboardAdmin() {
           </table>
         )}
       </section>
+      {isAuthenticated && isAdmin && <AdminResourcesPanel />}
     </DashboardShell>
   )
 }

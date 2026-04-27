@@ -1,11 +1,13 @@
 target/
 node_modules/
+frontend/node_modules/
+backend/target/
 /.idea/
 .vscode/
 *.log
 *.class
 *.jar
+*.iml
 dist/
-frontend/node_modules/
 .DS_Store
 .env

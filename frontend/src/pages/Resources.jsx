@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 
-const API_BASE_URL = 'http://localhost:8081/api/resources';
+const API_BASE_URL = '/api/resources';
 
 export default function Resources() {
     const [resources, setResources] = useState([]);
@@ -88,9 +88,9 @@ export default function Resources() {
 
     const filteredResources = useMemo(() => {
         return resources.filter(res => {
-            const matchesType = res.type.toLowerCase().includes(searchType.toLowerCase());
+            const matchesType = (res.type || '').toLowerCase().includes(searchType.toLowerCase());
             const matchesCapacity = !searchCapacity || res.capacity >= parseInt(searchCapacity);
-            const matchesLocation = res.location.toLowerCase().includes(searchLocation.toLowerCase());
+            const matchesLocation = (res.location || '').toLowerCase().includes(searchLocation.toLowerCase());
             return matchesType && matchesCapacity && matchesLocation;
         });
     }, [resources, searchType, searchCapacity, searchLocation]);
@@ -208,8 +208,8 @@ export default function Resources() {
                                         <td style={{ fontWeight: '600' }}>{res.capacity}</td>
                                         <td style={{ color: '#64748b' }}>{res.location}</td>
                                         <td>
-                                            <span className={`hub-badge ${res.status === 'ACTIVE' ? 'hub-badge-active' : 'hub-badge-oos'}`}>
-                                                ● {res.status.replace('_', ' ')}
+                                            <span className={`hub-badge ${(res.status || 'ACTIVE') === 'ACTIVE' ? 'hub-badge-active' : 'hub-badge-oos'}`}>
+                                                ● {(res.status || 'ACTIVE').replace('_', ' ')}
                                             </span>
                                         </td>
                                         <td style={{ textAlign: 'right' }}>
@@ -236,8 +236,8 @@ export default function Resources() {
                                     <div className="hub-card-icon">
                                         {res.type === 'LAB' ? '🧪' : res.type === 'LECTURE_HALL' ? '🎭' : '🏢'}
                                     </div>
-                                    <span className={`hub-badge ${res.status === 'ACTIVE' ? 'hub-badge-active' : 'hub-badge-oos'}`} style={{ fontSize: '10px' }}>
-                                        ● {res.status.replace('_', ' ')}
+                                    <span className={`hub-badge ${(res.status || 'ACTIVE') === 'ACTIVE' ? 'hub-badge-active' : 'hub-badge-oos'}`} style={{ fontSize: '10px' }}>
+                                        ● {(res.status || 'ACTIVE').replace('_', ' ')}
                                     </span>
                                 </div>
                                 <h3 style={{ fontSize: '20px', color: '#0f4c81', margin: '0 0 4px' }}>{res.name}</h3>

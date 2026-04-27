@@ -14,6 +14,9 @@ import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.authentication.HttpStatusEntryPoint;
+import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -56,6 +59,10 @@ public class SecurityConfig {
                     .requestMatchers("/manager/**").hasRole("MANAGER")
                     .requestMatchers("/", "/index.html", "/api/public", "/api/auth/status", "/api/auth/logout", "/api/auth/local/login", "/oauth2/**", "/login/**", "/api/user").permitAll()
                     .anyRequest().authenticated()
+                )
+                .exceptionHandling(e -> e
+                    .defaultAuthenticationEntryPointFor(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED), new AntPathRequestMatcher("/api/**"))
+                    .defaultAuthenticationEntryPointFor(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED), new AntPathRequestMatcher("/admin/api/**"))
                 )
                 .addFilterBefore(localAdminAuthFilter, UsernamePasswordAuthenticationFilter.class)
                 .oauth2Login(oauth2 -> oauth2
