@@ -36,14 +36,39 @@ export async function addComment(ticketId, content) {
 
 export async function uploadAttachments(ticketId, files) {
   const formData = new FormData();
-  for (let file of files) {
-    formData.append("files", file);
-  }
+  Array.from(files).forEach(file => formData.append("files", file)); // ← fix
 
   const res = await fetch(`${API_BASE}/api/incidents/${ticketId}/attachments`, {
     method: "POST",
     credentials: "include",
     body: formData,
   });
+
+  if (!res.ok) {
+    const err = await res.text();
+    throw new Error(err || "Upload failed");
+  }
+
   return res.json();
 }
+
+
+export async function deleteIncident(ticketId) {
+  await fetch(`${API_BASE}/api/incidents/${ticketId}`, {
+    method: "DELETE",
+    credentials: "include",
+  });
+}
+
+
+export async function deleteComment(ticketId, commentId) {
+  const res = await fetch(
+    `${API_BASE}/api/incidents/${ticketId}/comments/${commentId}`,
+    {
+      method: "DELETE",
+      credentials: "include",
+    }
+  );
+  return res.json();
+}
+

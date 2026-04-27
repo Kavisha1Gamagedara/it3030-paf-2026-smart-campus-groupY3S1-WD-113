@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { getIncidentById, addComment, uploadAttachments } from "../../api/incidentApi";
+import { getIncidentById, addComment, uploadAttachments, deleteComment } from "../../api/incidentApi";
 
 export default function IncidentDetails() {
   const { id } = useParams();
@@ -24,6 +24,30 @@ export default function IncidentDetails() {
     setTicket(updated);
     setFiles([]);
   }
+
+  async function handleDeleteComment(commentId) {
+    if (!window.confirm("Delete this comment?")) return;
+    const updated = await deleteComment(id, commentId);
+    setTicket(updated);
+  }
+
+  async function submitFiles() {
+    if (!files || files.length === 0) {
+        alert("Please select at least one file.");
+        return;
+    }
+    if (files.length > 3) {
+        alert("Maximum 3 attachments allowed.");
+        return;
+    }
+    try {
+        const updated = await uploadAttachments(id, files);
+        setTicket(updated);
+        setFiles([]);
+    } catch (err) {
+        alert("Upload failed: " + err.message);
+    }
+    }
 
   if (!ticket) return (
     <div className="page" style={{ textAlign: "center", paddingTop: 80 }}>
@@ -67,13 +91,23 @@ export default function IncidentDetails() {
           <h3 className="section-title" style={{ margin: 0 }}>Comments</h3>
         </div>
 
-        {ticket.comments?.length === 0 || !ticket.comments ? (
+        {!ticket.comments || ticket.comments.length === 0 ? (
           <p style={{ color: "var(--muted)", fontSize: 14 }}>No comments yet.</p>
         ) : (
           <div style={{ display: "flex", flexDirection: "column", gap: 12, marginBottom: 16 }}>
             {ticket.comments.map(c => (
-              <div key={c.id} className="card" style={{ padding: "12px 16px" }}>
+              <div
+                key={c.id}
+                className="card"
+                style={{ padding: "12px 16px", display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12 }}
+              >
                 <p style={{ margin: 0, fontSize: 14 }}>{c.content}</p>
+                <button
+                  className="hub-btn-danger"
+                  onClick={() => handleDeleteComment(c.id)}
+                >
+                  Delete
+                </button>
               </div>
             ))}
           </div>
@@ -102,9 +136,9 @@ export default function IncidentDetails() {
           <input
             type="file"
             multiple
-            onChange={e => setFiles(e.target.files)}
+            onChange={e => setFiles(Array.from(e.target.files))} // ← fix: convert to Array
             style={{ flex: 1, fontSize: 14, color: "var(--muted)" }}
-          />
+            />
           <button className="primary-button" onClick={submitFiles}>
             Upload
           </button>

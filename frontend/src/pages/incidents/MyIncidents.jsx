@@ -1,14 +1,21 @@
 import { useEffect, useState } from "react";
-import { getMyIncidents } from "../../api/incidentApi";
-import { Link } from "react-router-dom";
-import "../../index.css"; // or wherever your CSS file is
+import { getMyIncidents, deleteIncident } from "../../api/incidentApi"; // add deleteIncident
+import { Link, useNavigate } from "react-router-dom"; // add useNavigate
+import "../../index.css";
 
 export default function MyIncidents() {
   const [tickets, setTickets] = useState([]);
+  const navigate = useNavigate(); // add this
 
   useEffect(() => {
     getMyIncidents().then(setTickets);
   }, []);
+
+  async function handleDelete(ticketId) {
+    if (!window.confirm("Are you sure you want to delete this ticket?")) return;
+    await deleteIncident(ticketId);
+    setTickets(tickets.filter(t => t.id !== ticketId)); // remove from list instantly
+  }
 
   return (
     <div className="page fade-in">
@@ -27,12 +34,13 @@ export default function MyIncidents() {
               <th>Status</th>
               <th>Priority</th>
               <th>Action</th>
+              <th>Delete</th>
             </tr>
           </thead>
           <tbody>
             {tickets.length === 0 ? (
               <tr>
-                <td colSpan="4" style={{ textAlign: "center", color: "var(--muted)" }}>
+                <td colSpan="5" style={{ textAlign: "center", color: "var(--muted)" }}>
                   No incidents found.
                 </td>
               </tr>
@@ -56,6 +64,14 @@ export default function MyIncidents() {
                     <Link to={`/incidents/${ticket.id}`}>
                       <button className="ghost-button">View</button>
                     </Link>
+                  </td>
+                  <td>
+                    <button
+                      className="hub-btn-danger"
+                      onClick={() => handleDelete(ticket.id)}
+                    >
+                      Delete
+                    </button>
                   </td>
                 </tr>
               ))

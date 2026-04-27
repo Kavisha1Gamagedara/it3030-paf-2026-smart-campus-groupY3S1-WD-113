@@ -146,4 +146,11 @@ public class IncidentTicketController {
 
         return ResponseEntity.ok(ticketService.createTicket(ticket));
     }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteTicket(@PathVariable String id) {
+        ticketService.deleteTicket(id);
+        return ResponseEntity.noContent().build();
+    }
+
 }
