@@ -2,14 +2,18 @@ import React, { useState, useEffect, useMemo } from 'react';
 
 const API_BASE_URL = '/api/resources';
 
+import BookingModal from '../components/BookingModal';
+
 export default function Resources() {
     const [resources, setResources] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+    const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
     const [editingResource, setEditingResource] = useState(null);
     const [resourceToDelete, setResourceToDelete] = useState(null);
+    const [resourceToBook, setResourceToBook] = useState(null);
     
     // Search Filters
     const [searchType, setSearchType] = useState('');
@@ -243,7 +247,7 @@ export default function Resources() {
                                 <h3 style={{ fontSize: '20px', color: '#0f4c81', margin: '0 0 4px' }}>{res.name}</h3>
                                 <p style={{ color: '#46c1ce', fontSize: '12px', fontWeight: '700', textTransform: 'uppercase', marginBottom: '24px' }}>{res.type}</p>
                                 
-                                <div style={{ display: 'flex', gap: '12px' }}>
+                                <div style={{ display: 'flex', gap: '12px', marginBottom: '16px' }}>
                                     <div style={{ flex: 1, background: '#f8fafc', padding: '12px', borderRadius: '16px' }}>
                                         <div style={{ color: '#94a3b8', fontSize: '10px', marginBottom: '4px' }}>👤</div>
                                         <div style={{ fontWeight: '700', fontSize: '14px' }}>{res.capacity} Seats</div>
@@ -253,6 +257,13 @@ export default function Resources() {
                                         <div style={{ fontWeight: '700', fontSize: '14px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{res.location}</div>
                                     </div>
                                 </div>
+                                <button 
+                                    className="hub-search-button" 
+                                    style={{ width: '100%', borderRadius: '12px' }}
+                                    onClick={() => { setResourceToBook(res); setIsBookingModalOpen(true); }}
+                                >
+                                    Book Now
+                                </button>
                             </div>
                         ))}
                     </div>
@@ -352,6 +363,17 @@ export default function Resources() {
                         </div>
                     </div>
                 </div>
+            )}
+            {/* 9. Booking Modal */}
+            {isBookingModalOpen && resourceToBook && (
+                <BookingModal 
+                    resource={resourceToBook} 
+                    onClose={() => setIsBookingModalOpen(false)} 
+                    onSuccess={() => {
+                        alert('Booking request submitted successfully! An admin will review it.');
+                        fetchResources();
+                    }}
+                />
             )}
         </div>
     );
