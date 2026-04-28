@@ -107,6 +107,14 @@ export default function DashboardShell({
               <div className="storage-fill" />
             </div>
             <p className="storage-meta">8 of 14 weeks completed</p>
+          <div className="sidebar-section" style={{ marginTop: '24px', borderTop: '1px solid #e2e8f0', paddingTop: '12px' }}>
+            <ul className="nav-list">
+              <li className="nav-item">
+                <LogoutButton className="btn-link" style={{ color: '#ef4444', fontWeight: '600', padding: '8px 12px' }}>
+                  Logout
+                </LogoutButton>
+              </li>
+            </ul>
           </div>
         </aside>
 
