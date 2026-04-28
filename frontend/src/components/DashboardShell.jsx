@@ -58,45 +58,41 @@ export default function DashboardShell({
           <div className="sidebar-section">
             <p className="section-title">Navigation</p>
             <ul className="nav-list">
-              <li
-                className={`nav-item ${activeTab === 'OVERVIEW' ? 'active' : ''}`}
-                onClick={() => onTabChange('OVERVIEW')}
-              >
-                Overview
-              </li>
+              {!isAdmin && (
+                <li
+                  className={`nav-item ${activeTab === 'OVERVIEW' ? 'active' : ''}`}
+                  onClick={() => onTabChange('OVERVIEW')}
+                >
+                  🏠 Overview
+                </li>
+              )}
               {isStudentOrUser && (
                 <li
                   className={`nav-item ${activeTab === 'BOOKINGS' ? 'active' : ''}`}
                   onClick={() => onTabChange('BOOKINGS')}
                 >
-                  Bookings
+                  📅 Bookings
                 </li>
               )}
               {isAdmin && (
                 <>
-                  <li
+                   <li
                     className={`nav-item ${activeTab === 'USERS' ? 'active' : ''}`}
                     onClick={() => onTabChange('USERS')}
                   >
-                    Users
+                    👥 Users
                   </li>
                   <li
                     className={`nav-item ${activeTab === 'RESOURCES' ? 'active' : ''}`}
                     onClick={() => onTabChange('RESOURCES')}
                   >
-                    Resources
+                    🏢 Resources
                   </li>
                   <li
                     className={`nav-item ${activeTab === 'BOOKINGS_ADMIN' ? 'active' : ''}`}
                     onClick={() => onTabChange('BOOKINGS_ADMIN')}
                   >
-                    Manage Bookings
-                  </li>
-                  <li
-                    className={`nav-item ${activeTab === 'INSIGHTS' ? 'active' : ''}`}
-                    onClick={() => onTabChange('INSIGHTS')}
-                  >
-                    Campus Insights
+                    🎫 Manage Bookings
                   </li>
                 </>
               )}
@@ -104,7 +100,7 @@ export default function DashboardShell({
                 className={`nav-item ${activeTab === 'TICKETS' ? 'active' : ''}`}
                 onClick={() => onTabChange('TICKETS')}
               >
-                Tickets
+                🛠️ Tickets
               </li>
             </ul>
           </div>
@@ -112,33 +108,34 @@ export default function DashboardShell({
           <div className="sidebar-section">
             <p className="section-title">Services</p>
             <ul className="nav-list">
-              <li className="nav-item"><Link to="/profile">Settings</Link></li>
-            </ul>
-          </div>
-
-
-
-          <div className="sidebar-section" style={{ marginTop: '24px', borderTop: '1px solid #e2e8f0', paddingTop: '12px' }}>
-            <ul className="nav-list">
               <li className="nav-item">
-                <LogoutButton className="btn-link" style={{ color: '#ef4444', fontWeight: '600', padding: '8px 12px' }}>
-                  Logout
-                </LogoutButton>
+                ⚙️ <Link to="/profile">Settings</Link>
               </li>
             </ul>
           </div>
+
+
+
+
         </aside>
 
         <section className="dashboard-main">
           <header className="dashboard-topbar">
             <div className="top-left">
               <h1 className="page-title">{activeTab === 'BOOKINGS' ? 'My Bookings' : title}</h1>
-              {displayRole && <p className="page-subtitle">Role: {displayRole}</p>}
+
             </div>
 
             <nav className="top-nav">
-              <button type="button" className={`tab ${activeTab === 'OVERVIEW' ? 'active' : ''}`} onClick={() => onTabChange('OVERVIEW')}>Overview</button>
-              <button type="button" className="tab">Calendar</button>
+              {!isAdmin && (
+                <>
+                  <button type="button" className={`tab ${activeTab === 'OVERVIEW' ? 'active' : ''}`} onClick={() => onTabChange('OVERVIEW')}>Overview</button>
+                  <button type="button" className="tab">Calendar</button>
+                </>
+              )}
+              {isAdmin && (
+                <button type="button" className={`tab ${activeTab === 'INSIGHTS' ? 'active' : ''}`} onClick={() => onTabChange('INSIGHTS')}>📊 Campus Insights</button>
+              )}
             </nav>
 
             <div className="top-actions">
@@ -181,29 +178,30 @@ export default function DashboardShell({
         </section>
 
         <aside className="dashboard-panel">
-          <div className="panel-header">
-            <div>
-              {headerTitle && <h2>{headerTitle}</h2>}
-              {displayName && displayEmail && <p className="panel-subtitle">{displayEmail}</p>}
-              {!displayName && displayEmail && <p className="panel-subtitle">{displayEmail}</p>}
+          <div className="panel-header" style={{ alignItems: 'flex-start' }}>
+            <div style={{ flex: 1 }}>
+              {headerTitle && <h2 style={{ fontSize: '18px', margin: 0 }}>{headerTitle}</h2>}
+              {displayEmail && <p className="panel-subtitle" style={{ fontSize: '12px', color: 'var(--muted)', margin: '4px 0 12px' }}>{displayEmail}</p>}
+              <LogoutButton 
+                className="btn btn-outline" 
+                style={{ 
+                    padding: '6px 12px', 
+                    fontSize: '11px', 
+                    color: '#ef4444', 
+                    borderColor: '#fee2e2',
+                    background: '#fff1f2',
+                    borderRadius: '8px'
+                }}
+              >
+                Sign Out
+              </LogoutButton>
             </div>
             {displayPicture && (
-              <img className="profile-photo" src={displayPicture} alt={headerTitle || 'Profile'} />
+              <img className="profile-photo" src={displayPicture} alt={headerTitle || 'Profile'} style={{ width: '52px', height: '52px', borderRadius: '14px' }} />
             )}
-            <LogoutButton className="ghost-button">Logout</LogoutButton>
           </div>
 
-          {(displayRole || displayProvider || updatedAt || displayEmail) && (
-            <div className="panel-section">
-              <p className="section-title">Account</p>
-              <ul className="activity-list">
-                {displayRole && <li>Role: {displayRole}</li>}
-                {displayProvider && <li>Provider: {displayProvider}</li>}
-                {displayEmail && !displayName && <li>Email: {displayEmail}</li>}
-                {updatedAt && <li>Updated: {updatedAt}</li>}
-              </ul>
-            </div>
-          )}
+
 
           <div className="panel-section">
             <NotificationPanel />

@@ -28,7 +28,7 @@ export default function DashboardAdmin() {
   const [editForm, setEditForm] = useState({})
   const [savingId, setSavingId] = useState('')
   const [deletingId, setDeletingId] = useState('')
-  const [activeTab, setActiveTab] = useState('USERS')
+  const [activeTab, setActiveTab] = useState('INSIGHTS')
 
   const usersCount = useMemo(() => users.length, [users])
   const isAuthenticated = !!(user && (user.sub || user.id))

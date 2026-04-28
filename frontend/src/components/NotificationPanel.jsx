@@ -64,44 +64,28 @@ export default function NotificationPanel() {
             <li 
               key={notification.id} 
               className={`activity-item ${notification.read ? 'read' : 'unread'}`}
-              style={{ 
-                padding: '12px', 
-                borderRadius: '12px', 
-                marginBottom: '8px',
-                background: notification.read ? 'transparent' : 'var(--bg-accent)',
-                border: notification.read ? '1px solid var(--border)' : '1px solid var(--primary-light)',
-                cursor: 'pointer',
-                transition: 'all 0.2s ease'
-              }}
               onClick={() => !notification.read && handleMarkAsRead(notification.id)}
             >
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                <span style={{ fontWeight: '700', fontSize: '13px', color: 'var(--text)' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '6px' }}>
+                <span style={{ fontWeight: '700', fontSize: '14px', color: 'var(--text)' }}>
                   {notification.title}
                 </span>
-                {!notification.read && (
-                  <span style={{ 
-                    width: '8px', 
-                    height: '8px', 
-                    borderRadius: '50%', 
-                    background: 'var(--primary)',
-                    display: 'inline-block'
-                  }} />
-                )}
               </div>
-              <p style={{ fontSize: '12px', color: 'var(--muted)', margin: '4px 0' }}>
+              <p style={{ fontSize: '13px', color: 'var(--muted)', margin: '0 0 10px 0', lineHeight: '1.4' }}>
                 {notification.message}
               </p>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '4px' }}>
-                <span style={{ fontSize: '10px', color: 'var(--muted-more)' }}>
-                  {new Date(notification.createdAt).toLocaleString()}
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ fontSize: '11px', color: 'var(--muted-more)', fontWeight: '500' }}>
+                  {new Date(notification.createdAt).toLocaleDateString()} at {new Date(notification.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                 </span>
                 {notification.referenceId && (
                   <Link 
                     to={notification.type === 'BOOKING' ? '/bookings' : `/incidents/${notification.referenceId}`}
-                    style={{ fontSize: '10px', fontWeight: '600', color: 'var(--primary)' }}
+                    className="btn-link"
+                    style={{ fontSize: '12px', fontWeight: '700', color: 'var(--primary)' }}
+                    onClick={(e) => e.stopPropagation()}
                   >
-                    View Details
+                    View →
                   </Link>
                 )}
               </div>

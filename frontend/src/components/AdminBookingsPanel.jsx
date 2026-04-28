@@ -201,7 +201,7 @@ export default function AdminBookingsPanel() {
             {!loading && !bookings.length && !error && <p className="helper">No bookings found.</p>}
 
             {!!bookings.length && (
-                <table className="hub-table" style={{ marginTop: '16px', background: 'white', borderRadius: '8px' }}>
+                <table className="file-table">
                     <thead>
                         <tr>
                             <th>USER</th>
