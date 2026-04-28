@@ -145,4 +145,8 @@ public class BookingService {
     public Optional<Booking> getBookingById(String id) {
         return bookingRepository.findById(id);
     }
+
+    public void clearAllBookings() {
+        bookingRepository.deleteAll();
+    }
 }
