@@ -130,8 +130,6 @@ export default function AdminIncidents() {
           { label: "Resolved", value: stats.resolved, color: "#166534", bg: "#dcfce7", emoji: "✅" },
           { label: "Closed", value: stats.closed, color: "#374151", bg: "#f3f4f6", emoji: "🔒" },
           { label: "Rejected", value: stats.rejected, color: "#991b1b", bg: "#fee2e2", emoji: "❌" },
-          { label: "Unassigned", value: stats.unassigned, color: "#6b21a8", bg: "#f3e8ff", emoji: "👤" },
-          { label: "Critical", value: stats.critical, color: "#b91c1c", bg: "#ffe4e6", emoji: "🔴" },
         ].map(stat => (
           <div
             key={stat.label}
