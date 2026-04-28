@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import jsPDF from 'jspdf';
-import 'jspdf-autotable';
+import autoTable from 'jspdf-autotable';
 
 const formatDateTime = (iso) => {
 // ... existing code ...
@@ -117,12 +117,12 @@ export default function AdminBookingsPanel() {
             new Date(b.createdAt).toLocaleDateString()
         ]);
 
-        doc.autoTable({
+        autoTable(doc, {
             head: [tableColumn],
             body: tableRows,
             startY: 45,
             theme: 'grid',
-            headStyles: { fillStyle: [15, 76, 129] },
+            headStyles: { fillColor: [15, 76, 129] },
             styles: { fontSize: 8 }
         });
 
