@@ -11,3 +11,5 @@ backend/target/
 dist/
 .DS_Store
 .env
+frontend/.env.local
+frontend/.env.local.backup

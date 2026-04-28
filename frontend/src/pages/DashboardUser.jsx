@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import DashboardShell from '../components/DashboardShell'
 import UserBookingsPanel from '../components/UserBookingsPanel'
+import MyIncidents from '../components/MyIncidents'
 
 export default function DashboardUser() {
   const [activeTab, setActiveTab] = useState('OVERVIEW')
@@ -19,6 +20,7 @@ export default function DashboardUser() {
             </div>
         )}
         {activeTab === 'BOOKINGS' && <UserBookingsPanel />}
+        {activeTab === 'TICKETS' && <MyIncidents />}
     </DashboardShell>
   )
 }

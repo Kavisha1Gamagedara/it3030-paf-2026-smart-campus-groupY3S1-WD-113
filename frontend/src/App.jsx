@@ -10,6 +10,9 @@ import DashboardTechnician from './pages/DashboardTechnician'
 import DashboardManager from './pages/DashboardManager'
 import Profile from './pages/Profile'
 import Resources from './pages/Resources'
+import MyIncidents from './components/MyIncidents'
+import CreateIncident from './components/CreateIncident'
+import IncidentDetails from './components/IncidentDetails'
 import { AuthProvider, useAuth } from './auth/AuthContext'
 import RequireAuth from './auth/RequireAuth'
 
@@ -46,6 +49,9 @@ export default function App() {
           <Route path="/dashboard/manager" element={<RequireAuth><DashboardManager /></RequireAuth>} />
           <Route path="/profile" element={<RequireAuth><Profile /></RequireAuth>} />
           <Route path="/resources" element={<Resources />} />
+          <Route path="/incidents" element={<RequireAuth><MyIncidents /></RequireAuth>} />
+          <Route path="/incidents/new" element={<RequireAuth><CreateIncident /></RequireAuth>} />
+          <Route path="/incidents/:id" element={<RequireAuth><IncidentDetails /></RequireAuth>} />
         </Routes>
       </BrowserRouter>
     </AuthProvider>
