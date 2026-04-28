@@ -46,7 +46,7 @@ export default function UserBookingsPanel() {
         if (!window.confirm('Are you sure you want to cancel this booking?')) return;
         try {
             const res = await fetch(`/api/bookings/${id}/cancel`, {
-                method: 'PUT',
+                method: 'POST',
                 credentials: 'include'
             });
             if (!res.ok) {

@@ -41,7 +41,7 @@ public class BookingController {
         return bookingService.getBookingsByUserId(userId);
     }
 
-    @PutMapping("/api/bookings/{id}/cancel")
+    @PostMapping("/api/bookings/{id}/cancel")
     public ResponseEntity<?> cancelBooking(@PathVariable String id, Authentication authentication) {
         try {
             String userId = (authentication != null) ? authentication.getName() : "anonymous";
