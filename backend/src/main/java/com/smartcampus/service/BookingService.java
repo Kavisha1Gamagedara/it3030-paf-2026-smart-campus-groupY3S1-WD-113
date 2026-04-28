@@ -124,7 +124,7 @@ public class BookingService {
     }
 
     public List<Booking> getBookingsByUserId(String userId) {
-        return bookingRepository.findByUserId(userId);
+        return bookingRepository.findByUserIdOrderByCreatedAtDesc(userId);
     }
 
     public Booking updateBookingStatus(String id, BookingStatus status, String reason) {
