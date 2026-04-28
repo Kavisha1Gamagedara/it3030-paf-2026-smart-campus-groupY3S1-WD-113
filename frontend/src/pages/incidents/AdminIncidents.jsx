@@ -9,6 +9,7 @@ export default function AdminIncidents() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [assignInputs, setAssignInputs] = useState({});
+  const [filterStatus, setFilterStatus] = useState("ALL");
 
   useEffect(() => {
     getAllIncidents()
@@ -82,6 +83,23 @@ export default function AdminIncidents() {
     "REJECTED": [],
   }[current] || []);
 
+  // ── Stats calculated from tickets ──────────────────────────────
+  const stats = {
+    total: tickets.length,
+    open: tickets.filter(t => t.status === "OPEN").length,
+    inProgress: tickets.filter(t => t.status === "IN_PROGRESS").length,
+    resolved: tickets.filter(t => t.status === "RESOLVED").length,
+    closed: tickets.filter(t => t.status === "CLOSED").length,
+    rejected: tickets.filter(t => t.status === "REJECTED").length,
+    unassigned: tickets.filter(t => !t.assignedTechnicianId).length,
+    critical: tickets.filter(t => t.priority === "CRITICAL").length,
+  };
+
+  // ── Filter tickets based on selected status ─────────────────────
+  const filteredTickets = filterStatus === "ALL"
+    ? tickets
+    : tickets.filter(t => t.status === filterStatus);
+
   if (loading) return (
     <div className="page" style={{ textAlign: "center", paddingTop: 80 }}>
       <p className="page-subtitle">Loading tickets...</p>
@@ -97,6 +115,77 @@ export default function AdminIncidents() {
           <p className="page-subtitle">{tickets.length} total tickets</p>
         </div>
       </div>
+
+      {/* ── Statistics Dashboard ────────────────────────────────── */}
+      <div style={{
+        display: "grid",
+        gridTemplateColumns: "repeat(auto-fit, minmax(130px, 1fr))",
+        gap: 12,
+        marginBottom: 24
+      }}>
+        {[
+          { label: "Total", value: stats.total, color: "#0f4c81", bg: "#e9f1fb", emoji: "🎫" },
+          { label: "Open", value: stats.open, color: "#92400e", bg: "#fef3c7", emoji: "🟡" },
+          { label: "In Progress", value: stats.inProgress, color: "#1e40af", bg: "#dbeafe", emoji: "🔵" },
+          { label: "Resolved", value: stats.resolved, color: "#166534", bg: "#dcfce7", emoji: "✅" },
+          { label: "Closed", value: stats.closed, color: "#374151", bg: "#f3f4f6", emoji: "🔒" },
+          { label: "Rejected", value: stats.rejected, color: "#991b1b", bg: "#fee2e2", emoji: "❌" },
+          { label: "Unassigned", value: stats.unassigned, color: "#6b21a8", bg: "#f3e8ff", emoji: "👤" },
+          { label: "Critical", value: stats.critical, color: "#b91c1c", bg: "#ffe4e6", emoji: "🔴" },
+        ].map(stat => (
+          <div
+            key={stat.label}
+            onClick={() => setFilterStatus(
+              stat.label === "Total" ? "ALL" :
+              stat.label === "In Progress" ? "IN_PROGRESS" :
+              stat.label.toUpperCase()
+            )}
+            style={{
+              background: stat.bg,
+              border: "1px solid " + stat.color + "33",
+              borderRadius: 14,
+              padding: "14px 16px",
+              cursor: "pointer",
+              transition: "transform 0.15s ease, box-shadow 0.15s ease",
+              boxShadow: filterStatus === (
+                stat.label === "Total" ? "ALL" :
+                stat.label === "In Progress" ? "IN_PROGRESS" :
+                stat.label.toUpperCase()
+              ) ? "0 0 0 2px " + stat.color : "none",
+            }}
+            onMouseEnter={e => e.currentTarget.style.transform = "translateY(-2px)"}
+            onMouseLeave={e => e.currentTarget.style.transform = "translateY(0)"}
+          >
+            <div style={{ fontSize: 22, marginBottom: 6 }}>{stat.emoji}</div>
+            <div style={{ fontSize: 26, fontWeight: 800, color: stat.color }}>
+              {stat.value}
+            </div>
+            <div style={{ fontSize: 12, fontWeight: 600, color: stat.color, opacity: 0.8 }}>
+              {stat.label}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* ── Active filter indicator ─────────────────────────────── */}
+      {filterStatus !== "ALL" && (
+        <div style={{
+          display: "flex", alignItems: "center", gap: 10,
+          marginBottom: 12, fontSize: 13, color: "var(--muted)"
+        }}>
+          <span>Showing: <strong style={{ color: "var(--text)" }}>{filterStatus}</strong> tickets ({filteredTickets.length})</span>
+          <button
+            onClick={() => setFilterStatus("ALL")}
+            style={{
+              padding: "2px 10px", fontSize: 11, borderRadius: 999,
+              border: "1px solid var(--border)", background: "#fff",
+              cursor: "pointer", fontWeight: 600
+            }}
+          >
+            Clear filter ✕
+          </button>
+        </div>
+      )}
 
       {success && (
         <div style={{
@@ -125,14 +214,14 @@ export default function AdminIncidents() {
             </tr>
           </thead>
           <tbody>
-            {tickets.length === 0 ? (
+            {filteredTickets.length === 0 ? (
               <tr>
                 <td colSpan="7" style={{ textAlign: "center", color: "var(--muted)", padding: 32 }}>
                   No tickets found.
                 </td>
               </tr>
             ) : (
-              tickets.map(ticket => (
+              filteredTickets.map(ticket => (
                 <tr key={ticket.id}>
                   <td>
                     <Link to={`/incidents/${ticket.id}`} style={{ color: "var(--primary)", fontWeight: 600 }}>
@@ -142,16 +231,15 @@ export default function AdminIncidents() {
                   <td style={{ color: "var(--muted)", fontSize: 12, wordBreak: "break-all" }}>
                     {ticket.reportedByUserId}
                   </td>
-                  {/* Phone number column */}
                   <td style={{ fontSize: 12 }}>
                     {ticket.phone
-                      ? <a href={`tel:${ticket.phone}`} style={{ color: "var(--primary)", fontWeight: 600, textDecoration: "none" }}>
+                      ? <a href={"tel:" + ticket.phone} style={{ color: "var(--primary)", fontWeight: 600, textDecoration: "none" }}>
                           {ticket.phone}
                         </a>
                       : <span style={{ color: "var(--muted)" }}>—</span>}
                   </td>
                   <td>
-                    <span className={`hub-badge ${statusClass(ticket.status)}`} style={{ fontSize: 11 }}>
+                    <span className={"hub-badge " + statusClass(ticket.status)} style={{ fontSize: 11 }}>
                       {ticket.status}
                     </span>
                   </td>
