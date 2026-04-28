@@ -45,8 +45,8 @@ public class BookingController {
     public ResponseEntity<?> cancelBooking(@PathVariable String id, Authentication authentication) {
         try {
             String userId = (authentication != null) ? authentication.getName() : "anonymous";
-            Booking cancelled = bookingService.cancelBooking(id, userId);
-            return ResponseEntity.ok(cancelled);
+            bookingService.cancelBooking(id, userId);
+            return ResponseEntity.ok("Booking successfully cancelled and deleted.");
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }

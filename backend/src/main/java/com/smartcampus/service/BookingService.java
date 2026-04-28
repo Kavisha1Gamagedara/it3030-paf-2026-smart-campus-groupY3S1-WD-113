@@ -115,8 +115,8 @@ public class BookingService {
             throw new RuntimeException("Cannot cancel a booking that has already started");
         }
 
-        booking.setStatus(BookingStatus.CANCELLED);
-        return bookingRepository.save(booking);
+        bookingRepository.delete(booking);
+        return null; // Return null or a dummy object as it's deleted
     }
 
     public List<Booking> getAllBookings() {
