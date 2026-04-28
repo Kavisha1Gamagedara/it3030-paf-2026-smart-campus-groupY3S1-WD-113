@@ -1,6 +1,9 @@
 import React, { useEffect, useState } from 'react';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 
 const formatDateTime = (iso) => {
+// ... existing code ...
     if (!iso) return '-';
     try {
         const d = new Date(iso);
@@ -91,6 +94,41 @@ export default function AdminBookingsPanel() {
         return matchesStatus && matchesDate && matchesResource;
     });
 
+    const exportToPDF = () => {
+        const doc = new jsPDF();
+        
+        // Add header
+        doc.setFontSize(18);
+        doc.setTextColor(15, 76, 129); // Smart Campus Blue
+        doc.text('Smart Campus - Booking Report', 14, 22);
+        
+        doc.setFontSize(10);
+        doc.setTextColor(100);
+        doc.text(`Generated on: ${new Date().toLocaleString()}`, 14, 30);
+        doc.text(`Total Bookings: ${filteredBookings.length}`, 14, 35);
+
+        const tableColumn = ["User", "Resource", "Date", "Time", "Status", "Requested On"];
+        const tableRows = filteredBookings.map(b => [
+            b.userName || b.userId || 'Unknown',
+            b.resourceName || b.resourceId,
+            b.date,
+            `${b.startTime} - ${b.endTime}`,
+            b.status,
+            new Date(b.createdAt).toLocaleDateString()
+        ]);
+
+        autoTable(doc, {
+            head: [tableColumn],
+            body: tableRows,
+            startY: 45,
+            theme: 'grid',
+            headStyles: { fillColor: [15, 76, 129] },
+            styles: { fontSize: 8 }
+        });
+
+        doc.save(`SmartCampus_Bookings_${new Date().toISOString().split('T')[0]}.pdf`);
+    };
+
     return (
         <section className="file-table-section" style={{ marginTop: '32px' }}>
             <div className="section-header">
@@ -99,6 +137,15 @@ export default function AdminBookingsPanel() {
                     <p className="helper">Review, approve, or reject campus resource bookings.</p>
                 </div>
                 <div className="table-actions" style={{ gap: '12px', flexWrap: 'wrap' }}>
+                    <button 
+                        type="button" 
+                        className="btn hub-search-button" 
+                        style={{ padding: '8px 16px', background: '#22c55e' }}
+                        onClick={exportToPDF}
+                        disabled={!filteredBookings.length}
+                    >
+                        Download Report (PDF)
+                    </button>
                     <input 
                         type="date" 
                         className="modern-input" 

@@ -15,9 +15,12 @@ public class Booking {
     private String userName;
     private String resourceId;
     private String resourceName;
-    private LocalDate date;
-    private LocalTime startTime;
-    private LocalTime endTime;
+    
+    // Using Strings to prevent Timezone/UTC shifting in MongoDB
+    private String date; // yyyy-MM-dd
+    private String startTime; // HH:mm
+    private String endTime; // HH:mm
+    
     private String purpose;
     private Integer attendeeCount;
     private BookingStatus status;
@@ -31,7 +34,7 @@ public class Booking {
         this.status = BookingStatus.PENDING;
     }
 
-    // Getters and Setters
+    // Standard Getters and Setters (using Strings)
     public String getId() { return id; }
     public void setId(String id) { this.id = id; }
 
@@ -47,14 +50,14 @@ public class Booking {
     public String getResourceName() { return resourceName; }
     public void setResourceName(String resourceName) { this.resourceName = resourceName; }
 
-    public LocalDate getDate() { return date; }
-    public void setDate(LocalDate date) { this.date = date; }
+    public String getDate() { return date; }
+    public void setDate(String date) { this.date = date; }
 
-    public LocalTime getStartTime() { return startTime; }
-    public void setStartTime(LocalTime startTime) { this.startTime = startTime; }
+    public String getStartTime() { return startTime; }
+    public void setStartTime(String startTime) { this.startTime = startTime; }
 
-    public LocalTime getEndTime() { return endTime; }
-    public void setEndTime(LocalTime endTime) { this.endTime = endTime; }
+    public String getEndTime() { return endTime; }
+    public void setEndTime(String endTime) { this.endTime = endTime; }
 
     public String getPurpose() { return purpose; }
     public void setPurpose(String purpose) { this.purpose = purpose; }
@@ -73,4 +76,15 @@ public class Booking {
 
     public Instant getUpdatedAt() { return updatedAt; }
     public void setUpdatedAt(Instant updatedAt) { this.updatedAt = updatedAt; }
+
+    // Logic helper methods to convert Strings to Java Time objects
+    public LocalDate getLocalDate() { 
+        return date != null ? LocalDate.parse(date) : null; 
+    }
+    public LocalTime getLocalStartTime() { 
+        return startTime != null ? LocalTime.parse(startTime) : null; 
+    }
+    public LocalTime getLocalEndTime() { 
+        return endTime != null ? LocalTime.parse(endTime) : null; 
+    }
 }

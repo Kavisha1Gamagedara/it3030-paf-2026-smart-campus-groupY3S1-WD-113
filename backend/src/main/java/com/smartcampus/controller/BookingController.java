@@ -17,6 +17,13 @@ public class BookingController {
     @Autowired
     private BookingService bookingService;
 
+    // --- EMERGENCY CLEANUP (Run once to fix 500 errors after schema change) ---
+    @DeleteMapping("/api/bookings/emergency-clear")
+    public String clearAllData() {
+        bookingService.clearAllBookings();
+        return "All bookings cleared. You can now use the system normally.";
+    }
+
     // --- USER ENDPOINTS ---
 
     @PostMapping("/api/bookings")
@@ -55,6 +62,12 @@ public class BookingController {
     }
 
     // --- ADMIN ENDPOINTS ---
+
+    @GetMapping("/admin/api/bookings/stats")
+    @PreAuthorize("hasRole('ADMIN')")
+    public java.util.Map<String, Object> getBookingStats() {
+        return bookingService.getBookingStats();
+    }
 
     @GetMapping("/admin/api/bookings")
     @PreAuthorize("hasRole('ADMIN')")

@@ -11,7 +11,7 @@ import java.util.List;
 public interface BookingRepository extends MongoRepository<Booking, String> {
     List<Booking> findByUserIdOrderByCreatedAtDesc(String userId);
     List<Booking> findByResourceId(String resourceId);
-    List<Booking> findByResourceIdAndDateAndStatusNot(String resourceId, LocalDate date, BookingStatus status);
+    List<Booking> findByResourceIdAndDateAndStatusNot(String resourceId, String date, BookingStatus status);
     List<Booking> findByStatus(BookingStatus status);
     List<Booking> findAllByOrderByCreatedAtDesc();
 }

@@ -1,8 +1,11 @@
 package com.smartcampus.service;
 
 import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -36,19 +39,27 @@ public class BookingService {
         // Validation: Attendee count rule for equipment
         if (resource.getType() == ResourceType.EQUIPMENT) {
             booking.setAttendeeCount(null); // Equipment doesn't need attendee count
-        } else if (booking.getAttendeeCount() == null || booking.getAttendeeCount() <= 0) {
-            throw new RuntimeException("Expected number of attendees is required for this facility");
+        } else {
+            if (booking.getAttendeeCount() == null || booking.getAttendeeCount() <= 0) {
+                throw new RuntimeException("Expected number of attendees is required for this facility");
+            }
+            // Strict Capacity Check
+            if (booking.getAttendeeCount() > resource.getCapacity()) {
+                throw new RuntimeException("Capacity exceeded! This resource only has " + resource.getCapacity() + " seats.");
+            }
         }
 
         // Validation: End time must be after Start time
-        if (booking.getEndTime().isBefore(booking.getStartTime()) || booking.getEndTime().equals(booking.getStartTime())) {
+        LocalTime start = booking.getLocalStartTime();
+        LocalTime end = booking.getLocalEndTime();
+        if (end.isBefore(start) || end.equals(start)) {
             throw new RuntimeException("End time must be after the start time.");
         }
 
-        // 2. Prevent overlapping bookings
-        boolean hasOverlap = checkOverlap(booking);
-        if (hasOverlap) {
-            throw new RuntimeException("The selected time slot is already booked for this resource.");
+        // 2. Prevent overlapping bookings based on capacity
+        String conflictMsg = checkCapacityConflicts(booking, resource);
+        if (conflictMsg != null) {
+            throw new RuntimeException(conflictMsg);
         }
 
         // 3. Set metadata
@@ -60,49 +71,40 @@ public class BookingService {
         return bookingRepository.save(booking);
     }
 
-    private boolean checkOverlap(Booking newBooking) {
-        Resource resource = resourceService.getResourceById(newBooking.getResourceId()).orElse(null);
-        if (resource == null) return false;
-
+    /**
+     * Checks if the new booking conflicts with existing ones.
+     * By default, resources are exclusive (one booking at a time).
+     */
+    private String checkCapacityConflicts(Booking newBooking, Resource resource) {
         int capacity = resource.getCapacity();
-        int newAttendees = normalizeAttendeeCount(newBooking.getAttendeeCount());
+        int newAttendees = (newBooking.getAttendeeCount() != null) ? newBooking.getAttendeeCount() : 1;
+        
+        // 1. First, check if the booking itself exceeds the absolute capacity
+        if (newAttendees > capacity) {
+             return "Capacity exceeded! This resource only has " + capacity + " seats.";
+        }
 
-        // 1. Get all relevant bookings (Approved or Pending)
+        // 2. Get all relevant bookings (Approved or Pending) for the same resource and date
         List<Booking> existing = bookingRepository.findByResourceIdAndDateAndStatusNot(
                 newBooking.getResourceId(), newBooking.getDate(), BookingStatus.REJECTED);
 
-        // 2. We only care about bookings that actually overlap with our new time range
-        List<Booking> overlaps = existing.stream()
+        // 3. Check for any time overlap
+        LocalTime newStart = newBooking.getLocalStartTime();
+        LocalTime newEnd = newBooking.getLocalEndTime();
+
+        boolean hasOverlap = existing.stream()
                 .filter(b -> b.getStatus() != BookingStatus.CANCELLED)
-                .filter(b -> b.getStartTime().isBefore(newBooking.getEndTime()) && b.getEndTime().isAfter(newBooking.getStartTime()))
-                .toList();
+                .anyMatch(b -> {
+                    LocalTime bStart = b.getLocalStartTime();
+                    LocalTime bEnd = b.getLocalEndTime();
+                    return bStart.isBefore(newEnd) && bEnd.isAfter(newStart);
+                });
 
-        // 3. Check every "Change Point" (whenever a booking starts or ends)
-        // If the occupancy + our new attendees > capacity at any point, then it's a conflict.
-        java.util.Set<java.time.LocalTime> checkPoints = new java.util.HashSet<>();
-        checkPoints.add(newBooking.getStartTime());
-        for (Booking b : overlaps) {
-            checkPoints.add(b.getStartTime());
+        if (hasOverlap) {
+            return "The selected time slot is already booked for this resource.";
         }
 
-        for (java.time.LocalTime time : checkPoints) {
-            // Only check points that fall within our new booking's window
-            if (!time.isBefore(newBooking.getStartTime()) && time.isBefore(newBooking.getEndTime())) {
-                int occupancyAtTime = getOccupancyAt(time, overlaps);
-                if (occupancyAtTime + newAttendees > capacity) {
-                    return true;
-                }
-            }
-        }
-
-        return newAttendees > capacity;
-    }
-
-    private int getOccupancyAt(java.time.LocalTime time, List<Booking> overlaps) {
-        return overlaps.stream()
-                .filter(b -> !time.isBefore(b.getStartTime()) && time.isBefore(b.getEndTime()))
-                .mapToInt(b -> normalizeAttendeeCount(b.getAttendeeCount()))
-                .sum();
+        return null;
     }
 
     public Booking cancelBooking(String id, String userId) {
@@ -117,14 +119,14 @@ public class BookingService {
 
         // Check if the booking has already started
         java.time.LocalDateTime now = java.time.LocalDateTime.now();
-        java.time.LocalDateTime bookingStart = java.time.LocalDateTime.of(booking.getDate(), booking.getStartTime());
+        java.time.LocalDateTime bookingStart = java.time.LocalDateTime.of(booking.getLocalDate(), booking.getLocalStartTime());
 
         if (now.isAfter(bookingStart)) {
             throw new RuntimeException("Cannot cancel a booking that has already started");
         }
 
         bookingRepository.deleteById(id);
-        return null; // Return null or a dummy object as it's deleted
+        return null; 
     }
 
     public List<Booking> getAllBookings() {
@@ -150,7 +152,28 @@ public class BookingService {
         return bookingRepository.findById(id);
     }
 
-    private int normalizeAttendeeCount(Integer count) {
-        return count != null ? count : 1;
+    public void clearAllBookings() {
+        bookingRepository.deleteAll();
+    }
+
+    public java.util.Map<String, Object> getBookingStats() {
+        List<Booking> all = bookingRepository.findAll();
+        
+        java.util.Map<String, Long> byResource = all.stream()
+                .collect(java.util.stream.Collectors.groupingBy(b -> b.getResourceName() != null ? b.getResourceName() : "Unknown", java.util.stream.Collectors.counting()));
+        
+        java.util.Map<String, Long> byStatus = all.stream()
+                .collect(java.util.stream.Collectors.groupingBy(b -> b.getStatus().toString(), java.util.stream.Collectors.counting()));
+
+        java.util.Map<String, Long> byDate = all.stream()
+                .collect(java.util.stream.Collectors.groupingBy(Booking::getDate, java.util.stream.Collectors.counting()));
+
+        java.util.Map<String, Object> stats = new java.util.HashMap<>();
+        stats.put("total", all.size());
+        stats.put("byResource", byResource);
+        stats.put("byStatus", byStatus);
+        stats.put("byDate", byDate);
+        
+        return stats;
     }
 }

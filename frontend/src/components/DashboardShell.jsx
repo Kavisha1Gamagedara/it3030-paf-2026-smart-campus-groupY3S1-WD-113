@@ -74,6 +74,12 @@ export default function DashboardShell({
                   >
                     Manage Bookings
                   </li>
+                  <li
+                    className={`nav-item ${activeTab === 'INSIGHTS' ? 'active' : ''}`}
+                    onClick={() => onTabChange('INSIGHTS')}
+                  >
+                    Campus Insights
+                  </li>
                 </>
               )}
               {/* LMS Links for Students/Staff */}
