@@ -46,8 +46,10 @@ public class BookingController {
         try {
             String userId = (authentication != null) ? authentication.getName() : "anonymous";
             bookingService.cancelBooking(id, userId);
+            System.out.println("DEBUG: Successfully deleted booking " + id);
             return ResponseEntity.ok("Booking successfully cancelled and deleted.");
         } catch (Exception e) {
+            System.err.println("DEBUG: Error deleting booking: " + e.getMessage());
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }

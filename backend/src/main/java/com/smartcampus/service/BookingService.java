@@ -100,10 +100,12 @@ public class BookingService {
     }
 
     public Booking cancelBooking(String id, String userId) {
+        System.out.println("DEBUG: Attempting to cancel booking ID: " + id + " for user: " + userId);
         Booking booking = bookingRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Booking not found"));
 
         if (!booking.getUserId().equals(userId)) {
+            System.out.println("DEBUG: Unauthorized! Booking user: " + booking.getUserId() + " vs provided: " + userId);
             throw new RuntimeException("Unauthorized to cancel this booking");
         }
 
@@ -115,7 +117,7 @@ public class BookingService {
             throw new RuntimeException("Cannot cancel a booking that has already started");
         }
 
-        bookingRepository.delete(booking);
+        bookingRepository.deleteById(id);
         return null; // Return null or a dummy object as it's deleted
     }
 
