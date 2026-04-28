@@ -11,7 +11,6 @@ export default function DashboardShell({
   children 
 }) {
   const { user, profile } = useAuth() || {}
-  // ... (keep previous variables)
   const displayName =
     (profile && profile.name) ||
     (user && (user.name || [user.given_name, user.family_name].filter(Boolean).join(' '))) ||
@@ -26,6 +25,7 @@ export default function DashboardShell({
 
   const roleValue = (profile && profile.role) || roleLabel || ''
   const roleUpper = roleValue && roleValue.toString().toUpperCase()
+  const isAdmin = roleUpper === 'ADMIN'
   const isStudentOrUser = roleUpper === 'STUDENT' || roleUpper === 'USER'
 
   return (
