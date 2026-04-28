@@ -1,10 +1,12 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { getIncidentById, addComment, uploadAttachments, deleteComment } from "../../api/incidentApi";
+import { useAuth } from "../../auth/AuthContext";
 
 export default function IncidentDetails() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { user } = useAuth() || {};
   const [ticket, setTicket] = useState(null);
   const [comment, setComment] = useState("");
   const [files, setFiles] = useState([]);
@@ -20,9 +22,21 @@ export default function IncidentDetails() {
   }
 
   async function submitFiles() {
-    const updated = await uploadAttachments(id, files);
-    setTicket(updated);
-    setFiles([]);
+    if (!files || files.length === 0) {
+      alert("Please select at least one file.");
+      return;
+    }
+    if (files.length > 3) {
+      alert("Maximum 3 attachments allowed.");
+      return;
+    }
+    try {
+      const updated = await uploadAttachments(id, files);
+      setTicket(updated);
+      setFiles([]);
+    } catch (err) {
+      alert("Upload failed: " + err.message);
+    }
   }
 
   async function handleDeleteComment(commentId) {
@@ -30,24 +44,6 @@ export default function IncidentDetails() {
     const updated = await deleteComment(id, commentId);
     setTicket(updated);
   }
-
-  async function submitFiles() {
-    if (!files || files.length === 0) {
-        alert("Please select at least one file.");
-        return;
-    }
-    if (files.length > 3) {
-        alert("Maximum 3 attachments allowed.");
-        return;
-    }
-    try {
-        const updated = await uploadAttachments(id, files);
-        setTicket(updated);
-        setFiles([]);
-    } catch (err) {
-        alert("Upload failed: " + err.message);
-    }
-    }
 
   if (!ticket) return (
     <div className="page" style={{ textAlign: "center", paddingTop: 80 }}>
@@ -60,6 +56,9 @@ export default function IncidentDetails() {
     ticket.status === "IN_PROGRESS" ? "hub-badge-maintenance" :
     "hub-badge-oos";
 
+  // current logged in user id
+  const currentUserId = user?.sub || user?.id || "";
+
   return (
     <div className="page fade-in">
 
@@ -69,7 +68,7 @@ export default function IncidentDetails() {
           <p className="breadcrumbs">Incidents / {ticket.id}</p>
           <h2 className="page-title">{ticket.title}</h2>
           <div style={{ display: "flex", gap: 8, marginTop: 8, flexWrap: "wrap" }}>
-            <span className={`hub-badge ${statusClass}`}>{ticket.status}</span>
+            <span className={"hub-badge " + statusClass}>{ticket.status}</span>
             <span className="badge">{ticket.priority}</span>
             <span className="tag">{ticket.category}</span>
           </div>
@@ -79,10 +78,66 @@ export default function IncidentDetails() {
         </button>
       </div>
 
-      {/* Description */}
+      {/* Description + Contact Info */}
       <div className="quick-access" style={{ marginBottom: 20 }}>
         <h3 className="section-title">Description</h3>
-        <p style={{ color: "var(--text)", lineHeight: 1.7 }}>{ticket.description}</p>
+        <p style={{ color: "var(--text)", lineHeight: 1.7, marginBottom: 16 }}>
+          {ticket.description}
+        </p>
+
+        {/* Phone number */}
+        {ticket.phone && (
+          <div style={{
+            display: "flex", alignItems: "center", gap: 10,
+            background: "#f0f7ff", border: "1px solid #bfdbfe",
+            borderRadius: 10, padding: "10px 14px", marginTop: 8
+          }}>
+            <span style={{ fontSize: 18 }}>📞</span>
+            <div>
+              <p style={{ margin: 0, fontSize: 12, color: "var(--muted)", fontWeight: 600 }}>
+                CONTACT NUMBER
+              </p>
+              <a href={"tel:" + ticket.phone}
+                style={{ color: "var(--primary)", fontWeight: 700, fontSize: 15, textDecoration: "none" }}>
+                {ticket.phone}
+              </a>
+            </div>
+          </div>
+        )}
+
+        {/* Location */}
+        {ticket.locationText && (
+          <div style={{
+            display: "flex", alignItems: "center", gap: 10,
+            background: "#f9f9f9", border: "1px solid var(--border)",
+            borderRadius: 10, padding: "10px 14px", marginTop: 8
+          }}>
+            <span style={{ fontSize: 18 }}>📍</span>
+            <div>
+              <p style={{ margin: 0, fontSize: 12, color: "var(--muted)", fontWeight: 600 }}>
+                LOCATION
+              </p>
+              <p style={{ margin: 0, fontWeight: 600 }}>{ticket.locationText}</p>
+            </div>
+          </div>
+        )}
+
+        {/* Resolution notes */}
+        {ticket.resolutionNotes && (
+          <div style={{
+            display: "flex", alignItems: "flex-start", gap: 10,
+            background: "#f0fdf4", border: "1px solid #bbf7d0",
+            borderRadius: 10, padding: "10px 14px", marginTop: 8
+          }}>
+            <span style={{ fontSize: 18 }}>✅</span>
+            <div>
+              <p style={{ margin: 0, fontSize: 12, color: "#166534", fontWeight: 600 }}>
+                RESOLUTION NOTES
+              </p>
+              <p style={{ margin: 0, color: "#166534" }}>{ticket.resolutionNotes}</p>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Comments */}
@@ -101,13 +156,24 @@ export default function IncidentDetails() {
                 className="card"
                 style={{ padding: "12px 16px", display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12 }}
               >
-                <p style={{ margin: 0, fontSize: 14 }}>{c.content}</p>
-                <button
-                  className="hub-btn-danger"
-                  onClick={() => handleDeleteComment(c.id)}
-                >
-                  Delete
-                </button>
+                <div>
+                  <p style={{ margin: 0, fontSize: 14 }}>{c.content}</p>
+                  {c.userId && (
+                    <p style={{ margin: "4px 0 0", fontSize: 11, color: "var(--muted)" }}>
+                      by {c.userId}
+                    </p>
+                  )}
+                </div>
+                {/* ✅ Only show Delete button if this comment belongs to current user */}
+                {c.userId === currentUserId && (
+                  <button
+                    className="hub-btn-danger"
+                    style={{ fontSize: 12, padding: "4px 10px" }}
+                    onClick={() => handleDeleteComment(c.id)}
+                  >
+                    Delete
+                  </button>
+                )}
               </div>
             ))}
           </div>
@@ -131,14 +197,15 @@ export default function IncidentDetails() {
       <div className="file-table-section">
         <div className="section-header">
           <h3 className="section-title" style={{ margin: 0 }}>Attachments</h3>
+          <span style={{ color: "var(--muted)", fontSize: 12 }}>Max 3 files</span>
         </div>
         <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
           <input
             type="file"
             multiple
-            onChange={e => setFiles(Array.from(e.target.files))} // ← fix: convert to Array
+            onChange={e => setFiles(Array.from(e.target.files))}
             style={{ flex: 1, fontSize: 14, color: "var(--muted)" }}
-            />
+          />
           <button className="primary-button" onClick={submitFiles}>
             Upload
           </button>

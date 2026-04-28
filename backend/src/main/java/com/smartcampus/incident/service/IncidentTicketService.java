@@ -90,5 +90,9 @@ public class IncidentTicketService {
     }
         ticketRepository.deleteById(ticketId);
     }
+    
+    public List<IncidentTicket> getAllTickets() {
+        return ticketRepository.findAll();
+    }
 }
 

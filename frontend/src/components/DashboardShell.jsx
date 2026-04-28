@@ -90,6 +90,19 @@ export default function DashboardShell({ title = 'Dashboard', roleLabel = 'User'
               <button type="button" className="tab">Courses</button>
               <button type="button" className="tab">Grades</button>
               <button type="button" className="tab">Calendar</button>
+              {/* Tickets button — routes based on role */}
+              {(() => {
+                const role = (profile && profile.role) ? profile.role.toUpperCase() : ''
+                const path =
+                  role === 'ADMIN' ? '/admin/incidents' :
+                  role === 'TECHNICIAN' ? '/technician/incidents' :
+                  '/incidents'
+                return (
+                  <Link to={path}>
+                    <button type="button" className="tab">🎫 Tickets</button>
+                  </Link>
+                )
+              })()}
             </nav>
 
             <div className="top-actions">

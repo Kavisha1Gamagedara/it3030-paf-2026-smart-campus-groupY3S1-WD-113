@@ -17,6 +17,9 @@ public class IncidentTicket {
     private String title;
     private String description;
     private String category;
+    private String phone;  // ← add this
+
+
 
     private TicketPriority priority;
     private TicketStatus status;
@@ -69,6 +72,14 @@ public class IncidentTicket {
 
     public void setDescription(String description) {
         this.description = description;
+    }
+
+    // add getter and setter:
+    public String getPhone() { 
+        return phone; 
+    }
+    public void setPhone(String phone) { 
+        this.phone = phone; 
     }
 
     public String getCategory() {
@@ -160,4 +171,6 @@ public class IncidentTicket {
     public void setComments(List<TicketComment> comments) {
         this.comments = comments;
     }
+
+    
 }

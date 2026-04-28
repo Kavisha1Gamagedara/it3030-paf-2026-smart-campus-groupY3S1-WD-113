@@ -8,6 +8,7 @@ import com.smartcampus.incident.model.IncidentTicket;
 import com.smartcampus.incident.service.AttachmentStorageService;
 import com.smartcampus.incident.service.IncidentTicketService;
 
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -35,12 +36,13 @@ public class IncidentTicketController {
     // USER: Create ticket
     @PostMapping
     public ResponseEntity<IncidentTicket> createTicket(
-            @RequestBody CreateIncidentTicketRequest request,
+            @Valid @RequestBody CreateIncidentTicketRequest request,
             Authentication authentication
     ) {
         IncidentTicket ticket = new IncidentTicket();
         ticket.setTitle(request.getTitle());
         ticket.setDescription(request.getDescription());
+        ticket.setPhone(request.getPhone());
         ticket.setCategory(request.getCategory());
         ticket.setPriority(request.getPriority());
         ticket.setResourceId(request.getResourceId());
@@ -61,6 +63,17 @@ public class IncidentTicketController {
         );
     }
 
+    // ADMIN: Get all tickets
+    @GetMapping
+    public ResponseEntity<List<IncidentTicket>> getAllTickets() {
+        return ResponseEntity.ok(ticketService.getAllTickets());
+    }
+
+    // TECHNICIAN: Get assigned tickets
+    @GetMapping("/assigned")
+    public ResponseEntity<List<IncidentTicket>> getAssignedTickets(Authentication authentication) {
+        return ResponseEntity.ok(ticketService.getTicketsByTechnician(authentication.getName()));
+    }
 
     // ALL: Get ticket by ID
     @GetMapping("/{id}")
@@ -147,10 +160,10 @@ public class IncidentTicketController {
         return ResponseEntity.ok(ticketService.createTicket(ticket));
     }
 
+    // DELETE ticket
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteTicket(@PathVariable String id) {
         ticketService.deleteTicket(id);
         return ResponseEntity.noContent().build();
     }
-
 }

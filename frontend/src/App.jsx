@@ -15,6 +15,8 @@ import RequireAuth from './auth/RequireAuth'
 import MyIncidents from './pages/incidents/MyIncidents'
 import CreateIncident from './pages/incidents/CreateIncident'
 import IncidentDetails from './pages/incidents/IncidentDetails'
+import AdminIncidents from './pages/incidents/AdminIncidents'
+import TechnicianIncidents from './pages/incidents/TechnicianIncidents'
 
 export default function App() {
   const Nav = () => {
@@ -52,6 +54,12 @@ export default function App() {
           <Route path="/incidents" element={<MyIncidents />} />
           <Route path="/incidents/new" element={<CreateIncident />} />
           <Route path="/incidents/:id" element={<IncidentDetails />} />
+          {/* Admin incident routes */}
+          <Route path="/admin/incidents" element={<RequireAuth><AdminIncidents /></RequireAuth>} />
+
+          {/* Technician incident routes */}
+          <Route path="/technician/incidents" element={<RequireAuth><TechnicianIncidents /></RequireAuth>} />
+
         </Routes>
       </BrowserRouter>
     </AuthProvider>
