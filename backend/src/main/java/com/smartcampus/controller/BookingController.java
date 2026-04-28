@@ -8,14 +8,22 @@ import org.springframework.web.bind.annotation.*;
 import com.smartcampus.model.Booking;
 import com.smartcampus.model.BookingStatus;
 import com.smartcampus.service.BookingService;
+import com.smartcampus.service.UserProfileService;
 import java.util.List;
 import java.util.Map;
+import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 
 @RestController
 public class BookingController {
 
     @Autowired
     private BookingService bookingService;
+
+    @Autowired
+    private UserProfileService userProfileService;
+
+    @Autowired
+    private org.springframework.security.oauth2.client.registration.ClientRegistrationRepository clientRegistrationRepository;
 
     // --- EMERGENCY CLEANUP (Run once to fix 500 errors after schema change) ---
     @DeleteMapping("/api/bookings/emergency-clear")
@@ -32,7 +40,24 @@ public class BookingController {
             // In a real app, we get the ID from the authentication principal.
             // For now, we'll assume the frontend sends the user details or we fetch from auth.
             if (authentication != null) {
-                booking.setUserId(authentication.getName());
+                String name = authentication.getName();
+                if ("admin".equals(name) || "local-admin".equals(name)) {
+                    booking.setUserId("local-admin");
+                    booking.setUserName("Local Admin");
+                } else if (authentication instanceof org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken oauthToken) {
+                    String provider = oauthToken.getAuthorizedClientRegistrationId();
+                    com.smartcampus.model.UserProfile profile = userProfileService.findByProviderAndProviderId(provider, name).orElse(null);
+                    if (profile != null) {
+                        booking.setUserId(profile.getId());
+                        booking.setUserName(profile.getName());
+                    } else {
+                        booking.setUserId(name);
+                        booking.setUserName(name);
+                    }
+                } else {
+                    booking.setUserId(name);
+                    booking.setUserName(name);
+                }
             }
             
             Booking created = bookingService.createBooking(booking);
@@ -44,14 +69,14 @@ public class BookingController {
 
     @GetMapping("/api/bookings/my")
     public List<Booking> getMyBookings(Authentication authentication) {
-        String userId = (authentication != null) ? authentication.getName() : "anonymous";
+        String userId = (authentication != null) ? resolveUserId(authentication) : "anonymous";
         return bookingService.getBookingsByUserId(userId);
     }
 
     @PostMapping("/api/bookings/{id}/cancel")
     public ResponseEntity<?> cancelBooking(@PathVariable String id, Authentication authentication) {
         try {
-            String userId = (authentication != null) ? authentication.getName() : "anonymous";
+            String userId = (authentication != null) ? resolveUserId(authentication) : "anonymous";
             bookingService.cancelBooking(id, userId);
             System.out.println("DEBUG: Successfully deleted booking " + id);
             return ResponseEntity.ok("Booking successfully cancelled and deleted.");
@@ -89,5 +114,23 @@ public class BookingController {
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
+    }
+
+    private String resolveUserId(Authentication authentication) {
+        if (authentication == null) return null;
+        String name = authentication.getName();
+
+        if ("admin".equals(name) || "local-admin".equals(name)) {
+            return "local-admin";
+        }
+
+        if (authentication instanceof org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken oauthToken) {
+            String provider = oauthToken.getAuthorizedClientRegistrationId();
+            return userProfileService.findByProviderAndProviderId(provider, name)
+                    .map(com.smartcampus.model.UserProfile::getId)
+                    .orElse(name);
+        }
+
+        return name;
     }
 }

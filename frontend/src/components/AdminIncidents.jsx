@@ -1,10 +1,12 @@
 import { useEffect, useState } from "react";
-import { getAllIncidents, updateIncidentStatus, assignTechnician } from "../api/incidentApi";
+import { getAllIncidents, updateIncidentStatus, assignTechnician, getAllUsers } from "../api/incidentApi";
 import { Link } from "react-router-dom";
 import "../index.css";
 
 export default function AdminIncidents() {
   const [tickets, setTickets] = useState([]);
+  const [technicians, setTechnicians] = useState([]);
+  const [allUsers, setAllUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
@@ -12,12 +14,17 @@ export default function AdminIncidents() {
   const [filterStatus, setFilterStatus] = useState("ALL");
 
   useEffect(() => {
-    getAllIncidents()
-      .then(data => {
-        if (Array.isArray(data)) setTickets(data);
+    Promise.all([getAllIncidents(), getAllUsers()])
+      .then(([ticketsData, usersData]) => {
+        if (Array.isArray(ticketsData)) setTickets(ticketsData);
         else { setError("Failed to load tickets."); setTickets([]); }
+        
+        if (Array.isArray(usersData)) {
+          setAllUsers(usersData);
+          setTechnicians(usersData.filter(u => u.role === 'TECHNICIAN'));
+        }
       })
-      .catch(() => setError("Failed to load tickets."))
+      .catch(() => setError("Failed to load data."))
       .finally(() => setLoading(false));
   }, []);
 
@@ -103,6 +110,16 @@ export default function AdminIncidents() {
       <p className="page-subtitle">Loading tickets...</p>
     </div>
   );
+
+  const getTechName = (techId) => {
+    const tech = technicians.find(t => t.id === techId);
+    return tech ? (tech.name || tech.email || tech.id.substring(0, 12)) : techId.substring(0, 12);
+  };
+
+  const getReporterName = (userId) => {
+    const user = allUsers.find(u => u.id === userId);
+    return user ? (user.name || user.email || user.id.substring(0, 12)) : userId.substring(0, 12);
+  };
 
   return (
     <div className="page fade-in">
@@ -223,7 +240,7 @@ export default function AdminIncidents() {
                     </Link>
                   </td>
                   <td style={{ color: "var(--muted)", fontSize: 12, wordBreak: "break-all" }}>
-                    {ticket.reportedByUserId}
+                    {getReporterName(ticket.reportedByUserId)}
                   </td>
                   <td style={{ fontSize: 12 }}>
                     {ticket.phone
@@ -243,25 +260,29 @@ export default function AdminIncidents() {
                   <td style={{ fontSize: 12, wordBreak: "break-all" }}>
                     {ticket.assignedTechnicianId
                       ? <span style={{ color: "var(--success)", fontWeight: 600 }}>
-                          ✓ {ticket.assignedTechnicianId.substring(0, 12)}...
+                          ✓ {getTechName(ticket.assignedTechnicianId)}
                         </span>
                       : <span style={{ color: "var(--muted)" }}>Unassigned</span>}
                   </td>
                   <td>
                     <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                       <div style={{ display: "flex", gap: 4 }}>
-                        <input
+                        <select
                           style={{
                             flex: 1, padding: "4px 8px", fontSize: 11,
                             borderRadius: 8, border: "1px solid var(--border)",
                             background: "#f9f9f9", minWidth: 0
                           }}
-                          placeholder="Technician ID"
                           value={assignInputs[ticket.id] || ""}
                           onChange={e => setAssignInputs(prev => ({
                             ...prev, [ticket.id]: e.target.value
                           }))}
-                        />
+                        >
+                          <option value="">Select Technician</option>
+                          {technicians.map(tech => (
+                            <option key={tech.id} value={tech.id}>{tech.name || tech.email || tech.id}</option>
+                          ))}
+                        </select>
                         <button
                           style={{
                             padding: "4px 10px", fontSize: 11, borderRadius: 8,

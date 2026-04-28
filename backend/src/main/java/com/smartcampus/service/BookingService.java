@@ -26,6 +26,9 @@ public class BookingService {
     @Autowired
     private ResourceService resourceService;
 
+    @Autowired
+    private NotificationService notificationService;
+
     public Booking createBooking(Booking booking) {
         // 1. Fetch the resource and validate it
         Resource resource = resourceService.getResourceById(booking.getResourceId())
@@ -68,7 +71,18 @@ public class BookingService {
         booking.setCreatedAt(Instant.now());
         booking.setUpdatedAt(Instant.now());
 
-        return bookingRepository.save(booking);
+        Booking saved = bookingRepository.save(booking);
+
+        // Notify Admin
+        notificationService.createNotification(
+            "local-admin", 
+            "New Booking Request", 
+            "A new booking for " + resource.getName() + " has been requested.", 
+            "BOOKING", 
+            saved.getId()
+        );
+
+        return saved;
     }
 
     /**
@@ -145,7 +159,18 @@ public class BookingService {
         booking.setRejectionReason(reason);
         booking.setUpdatedAt(Instant.now());
         
-        return bookingRepository.save(booking);
+        Booking saved = bookingRepository.save(booking);
+
+        // Notify User
+        notificationService.createNotification(
+            saved.getUserId(),
+            "Booking Status Updated",
+            "Your booking for " + saved.getResourceName() + " is now " + status + (reason != null && !reason.isEmpty() ? ": " + reason : "."),
+            "BOOKING",
+            saved.getId()
+        );
+
+        return saved;
     }
 
     public Optional<Booking> getBookingById(String id) {
