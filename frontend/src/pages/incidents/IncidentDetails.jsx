@@ -194,15 +194,59 @@ export default function IncidentDetails() {
       </div>
 
       {/* Attachments */}
-      <div className="file-table-section">
-        <div className="section-header">
-          <h3 className="section-title" style={{ margin: 0 }}>Attachments</h3>
-          <span style={{ color: "var(--muted)", fontSize: 12 }}>Max 3 files</span>
+    <div className="file-table-section">
+      <div className="section-header">
+        <h3 className="section-title" style={{ margin: 0 }}>Attachments</h3>
+        <span style={{ color: "var(--muted)", fontSize: 12 }}>Max 3 files</span>
+      </div>
+
+      {/* Show existing attachments as images */}
+      {ticket.attachmentFileIds && ticket.attachmentFileIds.length > 0 && (
+        <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginBottom: 16 }}>
+          {ticket.attachmentFileIds.map((fileId, index) => (
+            <div key={fileId} style={{
+              border: "1px solid var(--border)", borderRadius: 12,
+              overflow: "hidden", width: 160, background: "#f9f9f9"
+            }}>
+              <img
+                src={"http://localhost:8081/api/incidents/attachments/" + fileId}
+                alt={"Attachment " + (index + 1)}
+                style={{ width: "100%", height: 120, objectFit: "cover", display: "block" }}
+                onError={e => {
+                  // if not an image, show a download link instead
+                  e.target.style.display = "none";
+                  e.target.nextSibling.style.display = "flex";
+                }}
+              />
+              <div style={{
+                display: "none", alignItems: "center", justifyContent: "center",
+                height: 120, flexDirection: "column", gap: 8
+              }}>
+                <span style={{ fontSize: 32 }}>📎</span>
+                <span style={{ fontSize: 11, color: "var(--muted)" }}>File {index + 1}</span>
+              </div>
+              <div style={{ padding: "8px 10px", borderTop: "1px solid var(--border)" }}>
+                
+                  <a href={"http://localhost:8081/api/incidents/attachments/" + fileId}
+                  target="_blank"
+                  rel="noreferrer"
+                  style={{ fontSize: 12, color: "var(--primary)", fontWeight: 600, textDecoration: "none" }}
+                >
+                  ⬇ Download
+                </a>
+              </div>
+            </div>
+          ))}
         </div>
+      )}
+
+      {/* Upload new files — only show if under 3 attachments */}
+      {(!ticket.attachmentFileIds || ticket.attachmentFileIds.length < 3) && (
         <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
           <input
             type="file"
             multiple
+            accept="image/*"
             onChange={e => setFiles(Array.from(e.target.files))}
             style={{ flex: 1, fontSize: 14, color: "var(--muted)" }}
           />
@@ -210,7 +254,15 @@ export default function IncidentDetails() {
             Upload
           </button>
         </div>
-      </div>
+      )}
+
+      {/* Show message when max reached */}
+      {ticket.attachmentFileIds && ticket.attachmentFileIds.length >= 3 && (
+        <p style={{ color: "var(--muted)", fontSize: 13, marginTop: 8 }}>
+          ✅ Maximum 3 attachments reached.
+        </p>
+      )}
+    </div>
 
     </div>
   );

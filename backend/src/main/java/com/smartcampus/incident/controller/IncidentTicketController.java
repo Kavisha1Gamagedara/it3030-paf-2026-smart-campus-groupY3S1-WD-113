@@ -166,4 +166,23 @@ public class IncidentTicketController {
         ticketService.deleteTicket(id);
         return ResponseEntity.noContent().build();
     }
+    // GET attachment file by ID
+        @GetMapping("/attachments/{fileId}")
+        public ResponseEntity<org.springframework.core.io.InputStreamResource> getAttachment(
+                @PathVariable String fileId
+        ) throws IOException {
+        com.mongodb.client.gridfs.model.GridFSFile file = attachmentStorageService.findFile(fileId);
+
+        if (file == null) {
+                return ResponseEntity.notFound().build();
+        }
+
+        String contentType = attachmentStorageService.getContentType(file);
+
+        return ResponseEntity.ok()
+                .contentType(org.springframework.http.MediaType.parseMediaType(contentType))
+                .body(new org.springframework.core.io.InputStreamResource(
+                        attachmentStorageService.getFileStream(file)
+                ));
+        }
 }

@@ -97,3 +97,7 @@ export async function deleteComment(ticketId, commentId) {
   );
   return res.json();
 }
+
+export function getAttachmentUrl(fileId) {
+  return `${API_BASE}/api/incidents/attachments/${fileId}`;
+}
