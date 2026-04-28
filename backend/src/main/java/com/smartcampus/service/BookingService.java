@@ -149,4 +149,25 @@ public class BookingService {
     public void clearAllBookings() {
         bookingRepository.deleteAll();
     }
+
+    public java.util.Map<String, Object> getBookingStats() {
+        List<Booking> all = bookingRepository.findAll();
+        
+        java.util.Map<String, Long> byResource = all.stream()
+                .collect(java.util.stream.Collectors.groupingBy(b -> b.getResourceName() != null ? b.getResourceName() : "Unknown", java.util.stream.Collectors.counting()));
+        
+        java.util.Map<String, Long> byStatus = all.stream()
+                .collect(java.util.stream.Collectors.groupingBy(b -> b.getStatus().toString(), java.util.stream.Collectors.counting()));
+
+        java.util.Map<String, Long> byDate = all.stream()
+                .collect(java.util.stream.Collectors.groupingBy(Booking::getDate, java.util.stream.Collectors.counting()));
+
+        java.util.Map<String, Object> stats = new java.util.HashMap<>();
+        stats.put("total", all.size());
+        stats.put("byResource", byResource);
+        stats.put("byStatus", byStatus);
+        stats.put("byDate", byDate);
+        
+        return stats;
+    }
 }

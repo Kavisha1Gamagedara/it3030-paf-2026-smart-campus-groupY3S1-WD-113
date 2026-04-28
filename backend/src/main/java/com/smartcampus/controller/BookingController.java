@@ -63,6 +63,12 @@ public class BookingController {
 
     // --- ADMIN ENDPOINTS ---
 
+    @GetMapping("/admin/api/bookings/stats")
+    @PreAuthorize("hasRole('ADMIN')")
+    public java.util.Map<String, Object> getBookingStats() {
+        return bookingService.getBookingStats();
+    }
+
     @GetMapping("/admin/api/bookings")
     @PreAuthorize("hasRole('ADMIN')")
     public List<Booking> getAllBookings() {
