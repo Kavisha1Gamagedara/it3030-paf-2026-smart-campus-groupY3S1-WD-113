@@ -26,6 +26,7 @@ export default function DashboardAdmin() {
   const [editForm, setEditForm] = useState({})
   const [savingId, setSavingId] = useState('')
   const [deletingId, setDeletingId] = useState('')
+  const [activeTab, setActiveTab] = useState('USERS')
 
   const usersCount = useMemo(() => users.length, [users])
   const isAuthenticated = !!(user && (user.sub || user.id))
@@ -127,137 +128,144 @@ export default function DashboardAdmin() {
   }
 
   return (
-    <DashboardShell title="Admin Dashboard" roleLabel="Admin">
-      <section className="file-table-section">
-        <div className="section-header">
-          <div>
-            <p className="breadcrumbs">Administration</p>
-            <h2 style={{ margin: 0 }}>User Management</h2>
-            <p className="helper">Manage registered users, update roles, or remove access.</p>
+    <DashboardShell 
+      title="Admin Dashboard" 
+      roleLabel="Admin"
+      activeTab={activeTab === 'USERS' ? 'USERS' : activeTab}
+      onTabChange={setActiveTab}
+    >
+      {activeTab === 'USERS' && (
+        <section className="file-table-section">
+          <div className="section-header">
+            <div>
+              <p className="breadcrumbs">Administration</p>
+              <h2 style={{ margin: 0 }}>User Management</h2>
+              <p className="helper">Manage registered users, update roles, or remove access.</p>
+            </div>
+            <div className="table-actions">
+              <span className="badge">{usersCount} users</span>
+              <button type="button" className="btn btn-outline" onClick={loadUsers} disabled={loading}>
+                {loading ? 'Refreshing...' : 'Refresh'}
+              </button>
+            </div>
           </div>
-          <div className="table-actions">
-            <span className="badge">{usersCount} users</span>
-            <button type="button" className="btn btn-outline" onClick={loadUsers} disabled={loading}>
-              {loading ? 'Refreshing...' : 'Refresh'}
-            </button>
-          </div>
-        </div>
 
-        {!authLoading && !isAuthenticated && (
-          <p className="status-warn" style={{ marginTop: 0 }}>
-            Sign in as admin to load users.
-          </p>
-        )}
+          {!authLoading && !isAuthenticated && (
+            <p className="status-warn" style={{ marginTop: 0 }}>
+              Sign in as admin to load users.
+            </p>
+          )}
 
-        {!authLoading && isAuthenticated && !isAdmin && (
-          <p className="status-warn" style={{ marginTop: 0 }}>
-            Your account does not have ADMIN access yet. Update your role and sign in again.
-          </p>
-        )}
+          {!authLoading && isAuthenticated && !isAdmin && (
+            <p className="status-warn" style={{ marginTop: 0 }}>
+              Your account does not have ADMIN access yet. Update your role and sign in again.
+            </p>
+          )}
 
-        {error && <p className="status-warn" style={{ marginTop: 0 }}>{error}</p>}
+          {error && <p className="status-warn" style={{ marginTop: 0 }}>{error}</p>}
 
-        {loading && !usersCount && isAuthenticated && isAdmin && <p className="helper">Loading users...</p>}
+          {loading && !usersCount && isAuthenticated && isAdmin && <p className="helper">Loading users...</p>}
 
-        {!loading && !usersCount && !error && (
-          <p className="helper">No users found yet.</p>
-        )}
+          {!loading && !usersCount && !error && (
+            <p className="helper">No users found yet.</p>
+          )}
 
-        {!!usersCount && (
-          <table className="file-table" style={{ marginTop: 12 }}>
-            <thead>
-              <tr>
-                <th>Name</th>
-                <th>Email</th>
-                <th>Role</th>
-                <th>Provider</th>
-                <th>Updated</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {users.map((user) => {
-                const isEditing = editId === user.id
-                return (
-                  <tr key={user.id}>
-                    <td>
-                      {isEditing ? (
-                        <input
-                          className="inline-input"
-                          value={editForm.name}
-                          onChange={updateEditField('name')}
-                          placeholder="Name"
-                        />
-                      ) : (
-                        user.name || '-'
-                      )}
-                    </td>
-                    <td>
-                      {isEditing ? (
-                        <input
-                          className="inline-input"
-                          value={editForm.email}
-                          onChange={updateEditField('email')}
-                          placeholder="Email"
-                        />
-                      ) : (
-                        user.email || '-'
-                      )}
-                    </td>
-                    <td>
-                      {isEditing ? (
-                        <select className="inline-input" value={editForm.role} onChange={updateEditField('role')}>
-                          {ROLE_OPTIONS.map((role) => (
-                            <option key={role} value={role}>{role.replace('_', ' ')}</option>
-                          ))}
-                        </select>
-                      ) : (
-                        <span className="badge">{(user.role || 'USER').replace('_', ' ')}</span>
-                      )}
-                    </td>
-                    <td>{user.provider || '-'}</td>
-                    <td>{formatDateTime(user.updatedAt)}</td>
-                    <td>
-                      <div className="table-actions">
-                        {!isEditing && (
-                          <button type="button" className="btn btn-outline" onClick={() => startEdit(user)}>
-                            Edit
-                          </button>
+          {!!usersCount && (
+            <table className="file-table" style={{ marginTop: 12 }}>
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Email</th>
+                  <th>Role</th>
+                  <th>Provider</th>
+                  <th>Updated</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {users.map((user) => {
+                  const isEditing = editId === user.id
+                  return (
+                    <tr key={user.id}>
+                      <td>
+                        {isEditing ? (
+                          <input
+                            className="inline-input"
+                            value={editForm.name}
+                            onChange={updateEditField('name')}
+                            placeholder="Name"
+                          />
+                        ) : (
+                          user.name || '-'
                         )}
-                        {isEditing && (
+                      </td>
+                      <td>
+                        {isEditing ? (
+                          <input
+                            className="inline-input"
+                            value={editForm.email}
+                            onChange={updateEditField('email')}
+                            placeholder="Email"
+                          />
+                        ) : (
+                          user.email || '-'
+                        )}
+                      </td>
+                      <td>
+                        {isEditing ? (
+                          <select className="inline-input" value={editForm.role} onChange={updateEditField('role')}>
+                            {ROLE_OPTIONS.map((role) => (
+                              <option key={role} value={role}>{role.replace('_', ' ')}</option>
+                            ))}
+                          </select>
+                        ) : (
+                          <span className="badge">{(user.role || 'USER').replace('_', ' ')}</span>
+                        )}
+                      </td>
+                      <td>{user.provider || '-'}</td>
+                      <td>{formatDateTime(user.updatedAt)}</td>
+                      <td>
+                        <div className="table-actions">
+                          {!isEditing && (
+                            <button type="button" className="btn btn-outline" onClick={() => startEdit(user)}>
+                              Edit
+                            </button>
+                          )}
+                          {isEditing && (
+                            <button
+                              type="button"
+                              className="btn btn-primary"
+                              onClick={() => saveUser(user.id)}
+                              disabled={savingId === user.id}
+                            >
+                              {savingId === user.id ? 'Saving...' : 'Save'}
+                            </button>
+                          )}
+                          {isEditing && (
+                            <button type="button" className="btn btn-outline" onClick={cancelEdit}>
+                              Cancel
+                            </button>
+                          )}
                           <button
                             type="button"
-                            className="btn btn-primary"
-                            onClick={() => saveUser(user.id)}
-                            disabled={savingId === user.id}
+                            className="btn btn-outline"
+                            onClick={() => deleteUser(user.id)}
+                            disabled={deletingId === user.id}
                           >
-                            {savingId === user.id ? 'Saving...' : 'Save'}
+                            {deletingId === user.id ? 'Deleting...' : 'Delete'}
                           </button>
-                        )}
-                        {isEditing && (
-                          <button type="button" className="btn btn-outline" onClick={cancelEdit}>
-                            Cancel
-                          </button>
-                        )}
-                        <button
-                          type="button"
-                          className="btn btn-outline"
-                          onClick={() => deleteUser(user.id)}
-                          disabled={deletingId === user.id}
-                        >
-                          {deletingId === user.id ? 'Deleting...' : 'Delete'}
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                )
-              })}
-            </tbody>
-          </table>
-        )}
-      </section>
-      {isAuthenticated && isAdmin && <AdminResourcesPanel />}
-      {isAuthenticated && isAdmin && <AdminBookingsPanel />}
+                        </div>
+                      </td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          )}
+        </section>
+      )}
+      {isAuthenticated && isAdmin && activeTab === 'RESOURCES' && <AdminResourcesPanel />}
+      {isAuthenticated && isAdmin && activeTab === 'BOOKINGS_ADMIN' && <AdminBookingsPanel />}
     </DashboardShell>
   )
 }

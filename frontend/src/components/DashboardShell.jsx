@@ -3,8 +3,15 @@ import { useAuth } from '../auth/AuthContext'
 import { Link } from 'react-router-dom'
 import LogoutButton from './LogoutButton'
 
-export default function DashboardShell({ title = 'Dashboard', roleLabel = 'User', children }) {
+export default function DashboardShell({ 
+  title = 'Dashboard', 
+  roleLabel = 'User', 
+  activeTab = 'OVERVIEW', 
+  onTabChange = () => {}, 
+  children 
+}) {
   const { user, profile } = useAuth() || {}
+  // ... (keep previous variables)
   const displayName =
     (profile && profile.name) ||
     (user && (user.name || [user.given_name, user.family_name].filter(Boolean).join(' '))) ||
@@ -16,6 +23,11 @@ export default function DashboardShell({ title = 'Dashboard', roleLabel = 'User'
   const updatedAtRaw = profile && profile.updatedAt
   const updatedAt = updatedAtRaw ? new Date(updatedAtRaw).toLocaleString() : ''
   const headerTitle = displayName || displayEmail
+
+  const roleValue = (profile && profile.role) || roleLabel || ''
+  const roleUpper = roleValue && roleValue.toString().toUpperCase()
+  const isStudentOrUser = roleUpper === 'STUDENT' || roleUpper === 'USER'
+
   return (
     <main className="dashboard">
       <div className="dashboard-shell">
@@ -27,34 +39,58 @@ export default function DashboardShell({ title = 'Dashboard', roleLabel = 'User'
 
           <div className="sidebar-section">
             <p className="section-title">Navigation</p>
-            {(() => {
-              const roleValue = (profile && profile.role) || roleLabel || ''
-              const roleUpper = roleValue && roleValue.toString().toUpperCase()
-              const isUserOrAdmin = roleUpper === 'USER' || roleUpper === 'ADMIN'
-              if (isUserOrAdmin) {
-                return (
-                  <ul className="nav-list">
-                    <li className="nav-item">Available facilities</li>
-                    <li className="nav-item">Bookings</li>
-                    <li className="nav-item">Tickets</li>
-                    <li className="nav-item">Notifications</li>
-                  </ul>
-                )
-              }
-
-              return (
-                <ul className="nav-list">
-                  <li className="nav-item">Overview</li>
-                  <li className="nav-item active">Courses</li>
+            <ul className="nav-list">
+              <li 
+                className={`nav-item ${activeTab === 'OVERVIEW' ? 'active' : ''}`}
+                onClick={() => onTabChange('OVERVIEW')}
+              >
+                Overview
+              </li>
+              {isStudentOrUser && (
+                <li 
+                  className={`nav-item ${activeTab === 'BOOKINGS' ? 'active' : ''}`}
+                  onClick={() => onTabChange('BOOKINGS')}
+                >
+                  Bookings
+                </li>
+              )}
+              {roleUpper === 'ADMIN' && (
+                <>
+                  <li 
+                    className={`nav-item ${activeTab === 'USERS' ? 'active' : ''}`}
+                    onClick={() => onTabChange('USERS')}
+                  >
+                    Users
+                  </li>
+                  <li 
+                    className={`nav-item ${activeTab === 'RESOURCES' ? 'active' : ''}`}
+                    onClick={() => onTabChange('RESOURCES')}
+                  >
+                    Resources
+                  </li>
+                  <li 
+                    className={`nav-item ${activeTab === 'BOOKINGS_ADMIN' ? 'active' : ''}`}
+                    onClick={() => onTabChange('BOOKINGS_ADMIN')}
+                  >
+                    Manage Bookings
+                  </li>
+                </>
+              )}
+              {/* LMS Links for Students/Staff */}
+              {!isAdmin && (
+                <>
+                  <li className="nav-item">Courses</li>
                   <li className="nav-item">Students</li>
                   <li className="nav-item">Faculty</li>
                   <li className="nav-item">Assignments</li>
                   <li className="nav-item">Grades</li>
                   <li className="nav-item">Timetable</li>
                   <li className="nav-item">Library</li>
-                </ul>
-              )
-            })()}
+                </>
+              )}
+              <li className="nav-item">Tickets</li>
+              <li className="nav-item">Notifications</li>
+            </ul>
           </div>
 
           <div className="sidebar-section">
@@ -77,12 +113,12 @@ export default function DashboardShell({ title = 'Dashboard', roleLabel = 'User'
         <section className="dashboard-main">
           <header className="dashboard-topbar">
             <div className="top-left">
-              <h1 className="page-title">{title}</h1>
+              <h1 className="page-title">{activeTab === 'BOOKINGS' ? 'My Bookings' : title}</h1>
               {displayRole && <p className="page-subtitle">Role: {displayRole}</p>}
             </div>
 
             <nav className="top-nav">
-              <button type="button" className="tab active">Overview</button>
+              <button type="button" className={`tab ${activeTab === 'OVERVIEW' ? 'active' : ''}`} onClick={() => onTabChange('OVERVIEW')}>Overview</button>
               <button type="button" className="tab">Courses</button>
               <button type="button" className="tab">Grades</button>
               <button type="button" className="tab">Calendar</button>
@@ -92,7 +128,7 @@ export default function DashboardShell({ title = 'Dashboard', roleLabel = 'User'
               <input
                 className="search-input"
                 type="search"
-                placeholder="Search courses, students, faculty..."
+                placeholder="Search resources..."
                 aria-label="Search"
               />
               <button type="button" className="icon-button">Alerts</button>
