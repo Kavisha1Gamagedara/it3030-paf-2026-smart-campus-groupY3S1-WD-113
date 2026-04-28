@@ -15,10 +15,13 @@ import CreateIncident from './components/CreateIncident'
 import IncidentDetails from './components/IncidentDetails'
 import { AuthProvider, useAuth } from './auth/AuthContext'
 import RequireAuth from './auth/RequireAuth'
+import { useLocation } from 'react-router-dom'
 
 export default function App() {
   const Nav = () => {
     const auth = useAuth()
+    const location = useLocation()
+    if (location.pathname === '/') return null
     return (
       <nav className="nav">
         <div className="nav-inner">
@@ -27,7 +30,6 @@ export default function App() {
             <Link to="/">Home</Link>
             {!auth?.user && <Link to="/login">Login</Link>}
             <Link to="/dashboard">Dashboard</Link>
-            <Link to="/resources">Resources</Link>
           </div>
         </div>
       </nav>

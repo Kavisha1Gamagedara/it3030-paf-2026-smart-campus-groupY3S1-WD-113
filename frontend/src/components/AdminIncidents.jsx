@@ -133,9 +133,9 @@ export default function AdminIncidents() {
 
       <div style={{
         display: "grid",
-        gridTemplateColumns: "repeat(auto-fit, minmax(130px, 1fr))",
-        gap: 12,
-        marginBottom: 24
+        gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))",
+        gap: 20,
+        marginBottom: 32
       }}>
         {[
           { label: "Total", value: stats.total, color: "#0f4c81", bg: "#e9f1fb", emoji: "🎫" },
@@ -211,17 +211,17 @@ export default function AdminIncidents() {
         }}>❌ {error}</div>
       )}
 
-      <div className="file-table-section" style={{ overflowX: "auto" }}>
-        <table className="hub-table" style={{ minWidth: 750, fontSize: 13 }}>
+      <div className="file-table-section">
+        <table className="file-table">
           <thead>
             <tr>
-              <th style={{ width: "16%" }}>Title</th>
-              <th style={{ width: "14%" }}>Reported By</th>
-              <th style={{ width: "12%" }}>📞 Contact</th>
-              <th style={{ width: "11%" }}>Status</th>
-              <th style={{ width: "9%" }}>Priority</th>
-              <th style={{ width: "13%" }}>Assigned To</th>
-              <th style={{ width: "25%" }}>Actions</th>
+              <th>Title</th>
+              <th>Reported By</th>
+              <th>📞 Contact</th>
+              <th>Status</th>
+              <th>Priority</th>
+              <th>Assigned To</th>
+              <th>Actions</th>
             </tr>
           </thead>
           <tbody>
