@@ -2,6 +2,9 @@ import React from 'react'
 import { useAuth } from '../auth/AuthContext'
 import { Link } from 'react-router-dom'
 import LogoutButton from './LogoutButton'
+import NotificationPanel from './NotificationPanel'
+import { getUnreadCount } from '../api/notificationApi'
+import { useEffect, useState } from 'react'
 
 export default function DashboardShell({
   title = 'Dashboard',
@@ -11,6 +14,21 @@ export default function DashboardShell({
   children
 }) {
   const { user, profile } = useAuth() || {}
+  const [unreadCount, setUnreadCount] = useState(0)
+
+  useEffect(() => {
+    const fetchUnread = async () => {
+      try {
+        const count = await getUnreadCount()
+        setUnreadCount(count)
+      } catch (err) {
+        console.error('Failed to fetch unread count')
+      }
+    }
+    fetchUnread()
+    const interval = setInterval(fetchUnread, 30000)
+    return () => clearInterval(interval)
+  }, [])
   const displayName =
     (profile && profile.name) ||
     (user && (user.name || [user.given_name, user.family_name].filter(Boolean).join(' '))) ||
@@ -34,7 +52,7 @@ export default function DashboardShell({
         <aside className="dashboard-sidebar">
           <div className="sidebar-brand">
             <div className="brand-mark">SC</div>
-            <span className="brand-name">SmartCampus LMS</span>
+            <span className="brand-name">SmartCampus</span>
           </div>
 
           <div className="sidebar-section">
@@ -82,43 +100,23 @@ export default function DashboardShell({
                   </li>
                 </>
               )}
-              {/* LMS Links for Students/Staff */}
-              {!isAdmin && (
-                <>
-                  <li className="nav-item">Courses</li>
-                  <li className="nav-item">Students</li>
-                  <li className="nav-item">Faculty</li>
-                  <li className="nav-item">Assignments</li>
-                  <li className="nav-item">Grades</li>
-                  <li className="nav-item">Timetable</li>
-                  <li className="nav-item">Library</li>
-                </>
-              )}
               <li
                 className={`nav-item ${activeTab === 'TICKETS' ? 'active' : ''}`}
                 onClick={() => onTabChange('TICKETS')}
               >
                 Tickets
               </li>
-              <li className="nav-item">Notifications</li>
             </ul>
           </div>
 
           <div className="sidebar-section">
             <p className="section-title">Services</p>
             <ul className="nav-list">
-              <li className="nav-item">Analytics</li>
               <li className="nav-item"><Link to="/profile">Settings</Link></li>
             </ul>
           </div>
 
-          <div className="storage-panel">
-            <p className="section-title">Term Progress</p>
-            <div className="storage-bar">
-              <div className="storage-fill" />
-            </div>
-            <p className="storage-meta">8 of 14 weeks completed</p>
-          </div>
+
 
           <div className="sidebar-section" style={{ marginTop: '24px', borderTop: '1px solid #e2e8f0', paddingTop: '12px' }}>
             <ul className="nav-list">
@@ -140,8 +138,6 @@ export default function DashboardShell({
 
             <nav className="top-nav">
               <button type="button" className={`tab ${activeTab === 'OVERVIEW' ? 'active' : ''}`} onClick={() => onTabChange('OVERVIEW')}>Overview</button>
-              <button type="button" className="tab">Courses</button>
-              <button type="button" className="tab">Grades</button>
               <button type="button" className="tab">Calendar</button>
             </nav>
 
@@ -152,7 +148,29 @@ export default function DashboardShell({
                 placeholder="Search resources..."
                 aria-label="Search"
               />
-              <button type="button" className="icon-button">Alerts</button>
+              <button type="button" className="icon-button" style={{ position: 'relative' }}>
+                Alerts
+                {unreadCount > 0 && (
+                  <span style={{
+                    position: 'absolute',
+                    top: '-5px',
+                    right: '-5px',
+                    background: '#ef4444',
+                    color: 'white',
+                    borderRadius: '50%',
+                    width: '18px',
+                    height: '18px',
+                    fontSize: '10px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontWeight: '700',
+                    border: '2px solid white'
+                  }}>
+                    {unreadCount > 9 ? '9+' : unreadCount}
+                  </span>
+                )}
+              </button>
               {headerTitle && <div className="user-chip">{headerTitle}</div>}
             </div>
           </header>
@@ -186,6 +204,10 @@ export default function DashboardShell({
               </ul>
             </div>
           )}
+
+          <div className="panel-section">
+            <NotificationPanel />
+          </div>
         </aside>
       </div>
     </main>

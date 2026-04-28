@@ -7,11 +7,13 @@ import com.smartcampus.dto.UpdateTicketStatusRequest;
 import com.smartcampus.model.IncidentTicket;
 import com.smartcampus.service.AttachmentStorageService;
 import com.smartcampus.service.IncidentTicketService;
+import com.smartcampus.service.UserProfileService;
 
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -24,13 +26,16 @@ public class IncidentTicketController {
 
     private final IncidentTicketService ticketService;
     private final AttachmentStorageService attachmentStorageService;
+    private final UserProfileService userProfileService;
 
     public IncidentTicketController(
             IncidentTicketService ticketService,
-            AttachmentStorageService attachmentStorageService
+            AttachmentStorageService attachmentStorageService,
+            UserProfileService userProfileService
     ) {
         this.ticketService = ticketService;
         this.attachmentStorageService = attachmentStorageService;
+        this.userProfileService = userProfileService;
     }
 
     // USER: Create ticket
@@ -47,7 +52,7 @@ public class IncidentTicketController {
         ticket.setPriority(request.getPriority());
         ticket.setResourceId(request.getResourceId());
         ticket.setLocationText(request.getLocationText());
-        ticket.setReportedByUserId(authentication.getName());
+        ticket.setReportedByUserId(resolveUserId(authentication));
 
         return new ResponseEntity<>(
                 ticketService.createTicket(ticket),
@@ -59,7 +64,7 @@ public class IncidentTicketController {
     @GetMapping("/my")
     public ResponseEntity<List<IncidentTicket>> getMyTickets(Authentication authentication) {
         return ResponseEntity.ok(
-                ticketService.getTicketsByUser(authentication.getName())
+                ticketService.getTicketsByUser(resolveUserId(authentication))
         );
     }
 
@@ -72,7 +77,7 @@ public class IncidentTicketController {
     // TECHNICIAN: Get assigned tickets
     @GetMapping("/assigned")
     public ResponseEntity<List<IncidentTicket>> getAssignedTickets(Authentication authentication) {
-        return ResponseEntity.ok(ticketService.getTicketsByTechnician(authentication.getName()));
+        return ResponseEntity.ok(ticketService.getTicketsByTechnician(resolveUserId(authentication)));
     }
 
     // ALL: Get ticket by ID
@@ -185,4 +190,22 @@ public class IncidentTicketController {
                         attachmentStorageService.getFileStream(file)
                 ));
         }
+
+    private String resolveUserId(Authentication authentication) {
+        if (authentication == null) return null;
+        String name = authentication.getName();
+
+        if ("admin".equals(name) || "local-admin".equals(name)) {
+            return "local-admin";
+        }
+
+        if (authentication instanceof OAuth2AuthenticationToken oauthToken) {
+            String provider = oauthToken.getAuthorizedClientRegistrationId();
+            return userProfileService.findByProviderAndProviderId(provider, name)
+                    .map(com.smartcampus.model.UserProfile::getId)
+                    .orElse(name);
+        }
+
+        return name;
+    }
 }

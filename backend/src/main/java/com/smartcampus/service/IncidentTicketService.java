@@ -18,9 +18,11 @@ import com.smartcampus.repository.IncidentTicketRepository;
 public class IncidentTicketService {
 
     private final IncidentTicketRepository repository;
+    private final NotificationService notificationService;
 
-    public IncidentTicketService(IncidentTicketRepository repository) {
+    public IncidentTicketService(IncidentTicketRepository repository, NotificationService notificationService) {
         this.repository = repository;
+        this.notificationService = notificationService;
     }
 
     public IncidentTicket createTicket(IncidentTicket ticket) {
@@ -38,7 +40,22 @@ public class IncidentTicketService {
             ticket.setCreatedAt(now);
         }
         ticket.setUpdatedAt(now);
-        return repository.save(ticket);
+        
+        boolean isNew = ticket.getId() == null;
+        IncidentTicket saved = repository.save(ticket);
+
+        if (isNew) {
+            // Notify Admin of new ticket
+            notificationService.createNotification(
+                "local-admin",
+                "New Incident Ticket",
+                "A new ticket has been reported: " + saved.getTitle(),
+                "TICKET",
+                saved.getId()
+            );
+        }
+
+        return saved;
     }
 
     public List<IncidentTicket> getTicketsByUser(String userId) {
@@ -61,7 +78,18 @@ public class IncidentTicketService {
     public IncidentTicket assignTechnician(String id, String technicianId) {
         IncidentTicket ticket = getTicketById(id);
         ticket.setAssignedTechnicianId(technicianId);
-        return createTicket(ticket);
+        IncidentTicket saved = createTicket(ticket);
+
+        // Notify Technician
+        notificationService.createNotification(
+            technicianId,
+            "Ticket Assigned",
+            "You have been assigned to ticket: " + saved.getTitle(),
+            "TICKET",
+            saved.getId()
+        );
+
+        return saved;
     }
 
     public IncidentTicket updateStatus(String id, TicketStatus status, String resolutionNotes) {
@@ -73,7 +101,18 @@ public class IncidentTicketService {
         if (resolutionNotes != null) {
             ticket.setResolutionNotes(resolutionNotes);
         }
-        return createTicket(ticket);
+        IncidentTicket saved = createTicket(ticket);
+
+        // Notify User of status update
+        notificationService.createNotification(
+            saved.getReportedByUserId(),
+            "Ticket Status Updated",
+            "Your ticket '" + saved.getTitle() + "' is now " + status + ".",
+            "TICKET",
+            saved.getId()
+        );
+
+        return saved;
     }
 
     public IncidentTicket addComment(String id, String userId, String content) {

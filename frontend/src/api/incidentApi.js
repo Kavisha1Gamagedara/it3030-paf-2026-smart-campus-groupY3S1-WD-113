@@ -59,6 +59,23 @@ export const deleteComment = (ticketId, commentId) =>
     method: 'DELETE'
   })
 
+export const getAllUsers = async () => {
+  const res = await fetch(`/admin/api/users`, {
+    credentials: 'include'
+  })
+  if (!res.ok) {
+    const message = await res.text()
+    throw new Error(message || `Request failed with status ${res.status}`)
+  }
+  return res.json()
+}
+
+export const getAllTechnicians = async () => {
+  const users = await getAllUsers()
+  return users.filter(u => u.role === 'TECHNICIAN')
+}
+
+
 export const uploadAttachments = async (id, files) => {
   const formData = new FormData()
   Array.from(files || []).forEach((file) => formData.append('files', file))
