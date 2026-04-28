@@ -27,6 +27,8 @@ export default function AdminBookingsPanel() {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const [statusFilter, setStatusFilter] = useState('ALL');
+    const [dateFilter, setDateFilter] = useState('');
+    const [resourceFilter, setResourceFilter] = useState('ALL');
     
     // For Review Modal
     const [reviewingBooking, setReviewingBooking] = useState(null);
@@ -80,9 +82,14 @@ export default function AdminBookingsPanel() {
         }
     };
 
-    const filteredBookings = bookings.filter(b => 
-        statusFilter === 'ALL' || b.status === statusFilter
-    );
+    const uniqueResources = [...new Set(bookings.map(b => b.resourceName || b.resourceId))].sort();
+
+    const filteredBookings = bookings.filter(b => {
+        const matchesStatus = statusFilter === 'ALL' || b.status === statusFilter;
+        const matchesDate = !dateFilter || b.date === dateFilter;
+        const matchesResource = resourceFilter === 'ALL' || (b.resourceName || b.resourceId) === resourceFilter;
+        return matchesStatus && matchesDate && matchesResource;
+    });
 
     return (
         <section className="file-table-section" style={{ marginTop: '32px' }}>
@@ -91,7 +98,25 @@ export default function AdminBookingsPanel() {
                     <h2 style={{ margin: 0 }}>Booking Management</h2>
                     <p className="helper">Review, approve, or reject campus resource bookings.</p>
                 </div>
-                <div className="table-actions">
+                <div className="table-actions" style={{ gap: '12px', flexWrap: 'wrap' }}>
+                    <input 
+                        type="date" 
+                        className="modern-input" 
+                        style={{ padding: '8px 12px' }}
+                        value={dateFilter}
+                        onChange={e => setDateFilter(e.target.value)}
+                    />
+                    <select 
+                        className="modern-input" 
+                        style={{ padding: '8px 12px', minWidth: '150px' }}
+                        value={resourceFilter}
+                        onChange={e => setResourceFilter(e.target.value)}
+                    >
+                        <option value="ALL">All Resources</option>
+                        {uniqueResources.map(res => (
+                            <option key={res} value={res}>{res}</option>
+                        ))}
+                    </select>
                     <select 
                         className="modern-input" 
                         style={{ padding: '8px 12px', minWidth: '150px' }}
@@ -107,6 +132,20 @@ export default function AdminBookingsPanel() {
                     <button type="button" className="btn btn-outline" onClick={loadBookings} disabled={loading}>
                         {loading ? 'Refreshing...' : 'Refresh'}
                     </button>
+                    { (dateFilter || resourceFilter !== 'ALL' || statusFilter !== 'ALL') && (
+                        <button 
+                            type="button" 
+                            className="btn-link" 
+                            style={{ fontSize: '12px', color: '#64748b' }}
+                            onClick={() => {
+                                setDateFilter('');
+                                setResourceFilter('ALL');
+                                setStatusFilter('ALL');
+                            }}
+                        >
+                            Reset
+                        </button>
+                    )}
                 </div>
             </div>
 
