@@ -99,6 +99,26 @@ public class BookingService {
                 .sum();
     }
 
+    public Booking cancelBooking(String id, String userId) {
+        Booking booking = bookingRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Booking not found"));
+
+        if (!booking.getUserId().equals(userId)) {
+            throw new RuntimeException("Unauthorized to cancel this booking");
+        }
+
+        // Check if the booking has already started
+        java.time.LocalDateTime now = java.time.LocalDateTime.now();
+        java.time.LocalDateTime bookingStart = java.time.LocalDateTime.of(booking.getDate(), booking.getStartTime());
+
+        if (now.isAfter(bookingStart)) {
+            throw new RuntimeException("Cannot cancel a booking that has already started");
+        }
+
+        booking.setStatus(BookingStatus.CANCELLED);
+        return bookingRepository.save(booking);
+    }
+
     public List<Booking> getAllBookings() {
         return bookingRepository.findAllByOrderByCreatedAtDesc();
     }

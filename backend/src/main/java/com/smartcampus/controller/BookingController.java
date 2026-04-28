@@ -41,6 +41,17 @@ public class BookingController {
         return bookingService.getBookingsByUserId(userId);
     }
 
+    @PutMapping("/api/bookings/{id}/cancel")
+    public ResponseEntity<?> cancelBooking(@PathVariable String id, Authentication authentication) {
+        try {
+            String userId = (authentication != null) ? authentication.getName() : "anonymous";
+            Booking cancelled = bookingService.cancelBooking(id, userId);
+            return ResponseEntity.ok(cancelled);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
     // --- ADMIN ENDPOINTS ---
 
     @GetMapping("/admin/api/bookings")

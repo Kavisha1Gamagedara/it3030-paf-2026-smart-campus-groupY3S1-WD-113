@@ -42,6 +42,28 @@ export default function UserBookingsPanel() {
         }
     };
 
+    const handleCancel = async (id) => {
+        if (!window.confirm('Are you sure you want to cancel this booking?')) return;
+        try {
+            const res = await fetch(`/api/bookings/${id}/cancel`, {
+                method: 'PUT',
+                credentials: 'include'
+            });
+            if (!res.ok) {
+                const msg = await res.text();
+                throw new Error(msg || 'Failed to cancel booking');
+            }
+            loadMyBookings();
+        } catch (err) {
+            alert(err.message);
+        }
+    };
+
+    const isFuture = (date, time) => {
+        const bookingTime = new Date(`${date}T${time}`);
+        return bookingTime > new Date();
+    };
+
     useEffect(() => {
         loadMyBookings();
     }, []);
@@ -105,6 +127,16 @@ export default function UserBookingsPanel() {
                                     <p style={{ margin: 0, fontSize: '11px', fontWeight: '700', color: '#f43f5e', textTransform: 'uppercase' }}>Reason for rejection</p>
                                     <p style={{ margin: '4px 0 0', fontSize: '12px', color: '#991b1b' }}>{b.rejectionReason}</p>
                                 </div>
+                            )}
+
+                            {(b.status === 'APPROVED' || b.status === 'PENDING') && isFuture(b.date, b.startTime) && (
+                                <button 
+                                    className="btn btn-outline" 
+                                    style={{ width: '100%', marginTop: '16px', color: '#f43f5e', borderColor: '#f43f5e' }}
+                                    onClick={() => handleCancel(b.id)}
+                                >
+                                    Cancel Booking
+                                </button>
                             )}
                         </div>
                     ))}
