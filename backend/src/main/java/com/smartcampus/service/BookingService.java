@@ -66,56 +66,36 @@ public class BookingService {
     }
 
     /**
-     * Checks if the new booking exceeds the resource's capacity at any point in its time range.
-     * Returns an error message if there's a conflict, or null if it's safe to book.
+     * Checks if the new booking conflicts with existing ones.
+     * By default, resources are exclusive (one booking at a time).
      */
     private String checkCapacityConflicts(Booking newBooking, Resource resource) {
         int capacity = resource.getCapacity();
         int newAttendees = (newBooking.getAttendeeCount() != null) ? newBooking.getAttendeeCount() : 1;
-        LocalTime newStart = newBooking.getLocalStartTime();
-        LocalTime newEnd = newBooking.getLocalEndTime();
+        
+        // 1. First, check if the booking itself exceeds the absolute capacity
+        if (newAttendees > capacity) {
+             return "Capacity exceeded! This resource only has " + capacity + " seats.";
+        }
 
-        // 1. Get all relevant bookings (Approved or Pending) for the same resource and date
+        // 2. Get all relevant bookings (Approved or Pending) for the same resource and date
         List<Booking> existing = bookingRepository.findByResourceIdAndDateAndStatusNot(
                 newBooking.getResourceId(), newBooking.getDate(), BookingStatus.REJECTED);
 
-        // 2. Filter for those that overlap in time and are not cancelled
-        List<Booking> overlaps = existing.stream()
+        // 3. Check for any time overlap
+        LocalTime newStart = newBooking.getLocalStartTime();
+        LocalTime newEnd = newBooking.getLocalEndTime();
+
+        boolean hasOverlap = existing.stream()
                 .filter(b -> b.getStatus() != BookingStatus.CANCELLED)
-                .filter(b -> {
+                .anyMatch(b -> {
                     LocalTime bStart = b.getLocalStartTime();
                     LocalTime bEnd = b.getLocalEndTime();
                     return bStart.isBefore(newEnd) && bEnd.isAfter(newStart);
-                })
-                .collect(Collectors.toList());
+                });
 
-        // 3. Check occupancy at all "critical time points" within the new booking's range
-        java.util.Set<LocalTime> criticalPoints = new java.util.HashSet<>();
-        criticalPoints.add(newStart);
-        for (Booking b : overlaps) {
-            criticalPoints.add(b.getLocalStartTime());
-        }
-
-        for (LocalTime time : criticalPoints) {
-            // Only check points that fall within our new booking's window
-            if (!time.isBefore(newStart) && time.isBefore(newEnd)) {
-                int occupancy = 0;
-                for (Booking b : overlaps) {
-                    LocalTime bStart = b.getLocalStartTime();
-                    LocalTime bEnd = b.getLocalEndTime();
-                    if (!time.isBefore(bStart) && time.isBefore(bEnd)) {
-                        occupancy += (b.getAttendeeCount() != null) ? b.getAttendeeCount() : 1;
-                    }
-                }
-
-                if (occupancy + newAttendees > capacity) {
-                    if (occupancy > 0) {
-                        return "Capacity exceeded! Only " + (capacity - occupancy) + " seats available during this time slot.";
-                    } else {
-                        return "Capacity exceeded! This resource only has " + capacity + " seats.";
-                    }
-                }
-            }
+        if (hasOverlap) {
+            return "The selected time slot is already booked for this resource.";
         }
 
         return null;
