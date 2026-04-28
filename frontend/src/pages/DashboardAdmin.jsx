@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react'
 import DashboardShell from '../components/DashboardShell'
 import AdminResourcesPanel from '../components/AdminResourcesPanel'
 import AdminBookingsPanel from '../components/AdminBookingsPanel'
+import AdminIncidents from '../components/AdminIncidents'
 import { useAuth } from '../auth/AuthContext'
 
 const ROLE_OPTIONS = ['ADMIN', 'MANAGER', 'TECHNICIAN', 'STUDENT', 'USER']
@@ -264,6 +265,7 @@ export default function DashboardAdmin() {
           )}
         </section>
       )}
+      {isAuthenticated && isAdmin && activeTab === 'TICKETS' && <AdminIncidents />}
       {isAuthenticated && isAdmin && activeTab === 'RESOURCES' && <AdminResourcesPanel />}
       {isAuthenticated && isAdmin && activeTab === 'BOOKINGS_ADMIN' && <AdminBookingsPanel />}
     </DashboardShell>

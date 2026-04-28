@@ -88,7 +88,12 @@ export default function DashboardShell({
                   <li className="nav-item">Library</li>
                 </>
               )}
-              <li className="nav-item">Tickets</li>
+              <li
+                className={`nav-item ${activeTab === 'TICKETS' ? 'active' : ''}`}
+                onClick={() => onTabChange('TICKETS')}
+              >
+                Tickets
+              </li>
               <li className="nav-item">Notifications</li>
             </ul>
           </div>

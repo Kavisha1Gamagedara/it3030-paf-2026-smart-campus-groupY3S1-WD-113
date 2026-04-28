@@ -1,12 +1,18 @@
 package com.smartcampus.service;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-import com.smartcampus.model.*;
-import com.smartcampus.repository.BookingRepository;
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import com.smartcampus.model.Booking;
+import com.smartcampus.model.BookingStatus;
+import com.smartcampus.model.Resource;
+import com.smartcampus.model.ResourceStatus;
+import com.smartcampus.model.ResourceType;
+import com.smartcampus.repository.BookingRepository;
 
 @Service
 public class BookingService {
@@ -59,7 +65,7 @@ public class BookingService {
         if (resource == null) return false;
 
         int capacity = resource.getCapacity();
-        int newAttendees = (newBooking.getAttendeeCount() != null) ? newBooking.getAttendeeCount() : 1;
+        int newAttendees = normalizeAttendeeCount(newBooking.getAttendeeCount());
 
         // 1. Get all relevant bookings (Approved or Pending)
         List<Booking> existing = bookingRepository.findByResourceIdAndDateAndStatusNot(
@@ -95,7 +101,7 @@ public class BookingService {
     private int getOccupancyAt(java.time.LocalTime time, List<Booking> overlaps) {
         return overlaps.stream()
                 .filter(b -> !time.isBefore(b.getStartTime()) && time.isBefore(b.getEndTime()))
-                .mapToInt(b -> (b.getAttendeeCount() != null) ? b.getAttendeeCount() : 1)
+                .mapToInt(b -> normalizeAttendeeCount(b.getAttendeeCount()))
                 .sum();
     }
 
@@ -142,5 +148,9 @@ public class BookingService {
 
     public Optional<Booking> getBookingById(String id) {
         return bookingRepository.findById(id);
+    }
+
+    private int normalizeAttendeeCount(Integer count) {
+        return count != null ? count : 1;
     }
 }

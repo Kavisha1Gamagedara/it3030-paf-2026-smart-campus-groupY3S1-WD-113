@@ -6,26 +6,27 @@ import java.util.List;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
 import org.springframework.security.oauth2.core.user.OAuth2User;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
-import jakarta.servlet.http.HttpSession;
 
 import com.smartcampus.model.UserProfile;
 import com.smartcampus.service.UserProfileService;
+
+import jakarta.servlet.http.HttpSession;
 
 @RestController
 public class AuthController {
@@ -180,8 +181,8 @@ public class AuthController {
 
     private UserProfile localAdminProfile(HttpSession session) {
         Object existing = session != null ? session.getAttribute("LOCAL_ADMIN_PROFILE") : null;
-        if (existing instanceof UserProfile) {
-            return (UserProfile) existing;
+        if (existing instanceof UserProfile profile) {
+            return profile;
         }
 
         UserProfile profile = new UserProfile();
