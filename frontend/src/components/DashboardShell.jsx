@@ -3,12 +3,12 @@ import { useAuth } from '../auth/AuthContext'
 import { Link } from 'react-router-dom'
 import LogoutButton from './LogoutButton'
 
-export default function DashboardShell({ 
-  title = 'Dashboard', 
-  roleLabel = 'User', 
-  activeTab = 'OVERVIEW', 
-  onTabChange = () => {}, 
-  children 
+export default function DashboardShell({
+  title = 'Dashboard',
+  roleLabel = 'User',
+  activeTab = 'OVERVIEW',
+  onTabChange = () => { },
+  children
 }) {
   const { user, profile } = useAuth() || {}
   const displayName =
@@ -40,35 +40,35 @@ export default function DashboardShell({
           <div className="sidebar-section">
             <p className="section-title">Navigation</p>
             <ul className="nav-list">
-              <li 
+              <li
                 className={`nav-item ${activeTab === 'OVERVIEW' ? 'active' : ''}`}
                 onClick={() => onTabChange('OVERVIEW')}
               >
                 Overview
               </li>
               {isStudentOrUser && (
-                <li 
+                <li
                   className={`nav-item ${activeTab === 'BOOKINGS' ? 'active' : ''}`}
                   onClick={() => onTabChange('BOOKINGS')}
                 >
                   Bookings
                 </li>
               )}
-              {roleUpper === 'ADMIN' && (
+              {isAdmin && (
                 <>
-                  <li 
+                  <li
                     className={`nav-item ${activeTab === 'USERS' ? 'active' : ''}`}
                     onClick={() => onTabChange('USERS')}
                   >
                     Users
                   </li>
-                  <li 
+                  <li
                     className={`nav-item ${activeTab === 'RESOURCES' ? 'active' : ''}`}
                     onClick={() => onTabChange('RESOURCES')}
                   >
                     Resources
                   </li>
-                  <li 
+                  <li
                     className={`nav-item ${activeTab === 'BOOKINGS_ADMIN' ? 'active' : ''}`}
                     onClick={() => onTabChange('BOOKINGS_ADMIN')}
                   >
@@ -107,6 +107,8 @@ export default function DashboardShell({
               <div className="storage-fill" />
             </div>
             <p className="storage-meta">8 of 14 weeks completed</p>
+          </div>
+
           <div className="sidebar-section" style={{ marginTop: '24px', borderTop: '1px solid #e2e8f0', paddingTop: '12px' }}>
             <ul className="nav-list">
               <li className="nav-item">
