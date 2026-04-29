@@ -11,7 +11,6 @@ import com.smartcampus.service.BookingService;
 import com.smartcampus.service.UserProfileService;
 import java.util.List;
 import java.util.Map;
-import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 
 @RestController
 public class BookingController {
@@ -21,9 +20,6 @@ public class BookingController {
 
     @Autowired
     private UserProfileService userProfileService;
-
-    @Autowired
-    private org.springframework.security.oauth2.client.registration.ClientRegistrationRepository clientRegistrationRepository;
 
     // --- EMERGENCY CLEANUP (Run once to fix 500 errors after schema change) ---
     @DeleteMapping("/api/bookings/emergency-clear")

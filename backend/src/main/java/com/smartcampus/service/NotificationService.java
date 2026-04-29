@@ -7,7 +7,7 @@ import com.smartcampus.model.Notification;
 import com.smartcampus.repository.NotificationRepository;
 import com.smartcampus.repository.UserProfileRepository;
 import com.smartcampus.model.UserProfile;
-import java.util.Optional;
+
 
 @Service
 public class NotificationService {

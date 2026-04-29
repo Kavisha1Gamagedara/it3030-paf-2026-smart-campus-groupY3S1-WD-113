@@ -43,19 +43,10 @@ public class AdminUserController {
     @PutMapping("/{id}")
     public ResponseEntity<?> updateUser(
             @PathVariable String id,
-            @RequestBody Map<String, Object> payload
+            @jakarta.validation.Valid @RequestBody com.smartcampus.dto.UpdateUserRequest request
     ) {
-        Map<String, Object> updates = new HashMap<>(payload != null ? payload : Map.of());
-        if (updates.containsKey("role")) {
-            String role = updates.get("role") != null ? updates.get("role").toString().trim().toUpperCase() : "";
-            if (role.isBlank() || !SUPPORTED_ROLES.contains(role)) {
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("message", "Invalid role"));
-            }
-            updates.put("role", role);
-        }
-
         return userProfileService
-                .updateProfileById(id, updates)
+                .updateProfileById(id, request)
                 .<ResponseEntity<?>>map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("message", "Profile not found")));
     }

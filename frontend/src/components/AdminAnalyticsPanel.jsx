@@ -3,6 +3,7 @@ import {
     BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
     PieChart, Pie, Cell, LineChart, Line
 } from 'recharts';
+import ResourceWiseHeatmap from './ResourceWiseHeatmap';
 
 const COLORS = ['#0f4c81', '#22c55e', '#ef4444', '#f59e0b', '#6366f1'];
 
@@ -118,6 +119,10 @@ export default function AdminAnalyticsPanel() {
                         </ResponsiveContainer>
                     </div>
                 </div>
+            </div>
+
+            <div style={{ marginTop: '24px' }}>
+                <ResourceWiseHeatmap />
             </div>
         </div>
     );

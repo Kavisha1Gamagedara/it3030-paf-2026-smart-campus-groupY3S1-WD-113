@@ -52,8 +52,12 @@ export default function Login() {
   const handleLocalLogin = async (e) => {
     e.preventDefault()
     setError('')
-    if (!username || !password) {
-      setError('Please enter both username and password')
+    if (!username) {
+      setError('Username cannot be blank')
+      return
+    }
+    if (!password) {
+      setError('Password cannot be blank')
       return
     }
     
@@ -76,8 +80,16 @@ export default function Login() {
     setError('')
     const { email, password, confirmPassword, contactNumber, faculty } = signupForm
 
-    if (!email || !password || !confirmPassword || !contactNumber) {
-      setError('Please fill in all fields')
+    if (!email) {
+      setError('Email cannot be blank')
+      return
+    }
+    if (!password) {
+      setError('Password cannot be blank')
+      return
+    }
+    if (!contactNumber) {
+      setError('Contact number cannot be blank')
       return
     }
 
@@ -86,16 +98,10 @@ export default function Login() {
       return
     }
 
-    // Strong password validation: letters, numbers, special characters
     const passwordRegex = /^(?=.*[a-zA-Z])(?=.*\d)(?=.*[@$!%*?&./#()]).{8,}$/;
     if (!passwordRegex.test(password)) {
-        setError('Password must contain letters, numbers, and at least one special character (@$!%*?&./#())');
+        setError('Password must contain letters, numbers, and special characters, and be at least 8 characters long');
         return
-    }
-
-    if (!email.endsWith('@smart.iitus')) {
-      setError('Email must be a @smart.iitus campus mail')
-      return
     }
 
     if (faculty === 'Computing Faculty' && !email.startsWith('IT')) {
@@ -111,10 +117,15 @@ export default function Login() {
         return
     }
 
-    // Check for exactly 8 numbers after the prefix and before @smart.iitus
     const emailRegex = /^[A-Z]{2}\d{8}@smart\.iitus$/;
     if (!emailRegex.test(email)) {
-        setError('Email must have exactly 8 digits after the prefix (e.g. IT20240001@smart.iitus)');
+        setError('Email must have exactly 8 digits after the prefix and end with @smart.iitus');
+        return
+    }
+
+    const contactRegex = /^\d{10}$/;
+    if (!contactRegex.test(contactNumber)) {
+        setError('Contact number must be exactly 10 digits');
         return
     }
 
