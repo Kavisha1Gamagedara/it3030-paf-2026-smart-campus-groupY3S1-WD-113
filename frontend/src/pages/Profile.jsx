@@ -9,7 +9,8 @@ export default function Profile() {
     name: '',
     email: '',
     picture: '',
-    notificationsEnabled: true
+    notificationsEnabled: true,
+    mfaEnabled: false
   })
   const [status, setStatus] = useState({})
   const [mfaSetup, setMfaSetup] = useState(null)
@@ -130,7 +131,7 @@ export default function Profile() {
         <header style={{ marginBottom: '32px', textAlign: 'center' }}>
             <div style={{ position: 'relative', display: 'inline-block', marginBottom: '16px' }}>
                 <img 
-                    src={profile?.picture || 'https://via.placeholder.com/100'} 
+                    src={profile?.picture || `https://ui-avatars.com/api/?name=${encodeURIComponent(form.name || 'User')}&background=random&color=fff&size=100`} 
                     alt="Profile" 
                     style={{ width: '100px', height: '100px', borderRadius: '30px', objectFit: 'cover', border: '4px solid #fff', boxShadow: '0 8px 16px rgba(0,0,0,0.1)' }} 
                 />

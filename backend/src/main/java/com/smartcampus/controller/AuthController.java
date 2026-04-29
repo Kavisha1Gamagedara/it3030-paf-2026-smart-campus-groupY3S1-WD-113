@@ -4,6 +4,7 @@ import java.time.Instant;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -27,7 +28,9 @@ import com.smartcampus.model.UserProfile;
 import com.smartcampus.service.UserProfileService;
 import com.smartcampus.service.MfaService;
 
+import org.springframework.security.crypto.password.PasswordEncoder;
 import jakarta.servlet.http.HttpSession;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 
 @RestController
 public class AuthController {
@@ -40,6 +43,12 @@ public class AuthController {
             "MANAGER"
     );
 
+    @org.springframework.beans.factory.annotation.Value("${LOCAL_ADMIN_USERNAME:admin}")
+    private String adminUsername;
+
+    @org.springframework.beans.factory.annotation.Value("${LOCAL_ADMIN_PASSWORD:admin123}")
+    private String adminPassword;
+
     @Autowired(required = false)
     private ClientRegistrationRepository clientRegistrationRepository;
 
@@ -48,6 +57,9 @@ public class AuthController {
 
     @Autowired
     private MfaService mfaService;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
 
     @GetMapping("/api/user")
     public Map<String, Object> user(@AuthenticationPrincipal OAuth2User principal, HttpSession session) {
@@ -67,6 +79,17 @@ public class AuthController {
                     "provider", "local"
             );
         }
+        if (session != null && session.getAttribute("LOCAL_USER_PROFILE") != null) {
+            UserProfile profile = (UserProfile) session.getAttribute("LOCAL_USER_PROFILE");
+            return Map.of(
+                    "id", profile.getId(),
+                    "name", profile.getName(),
+                    "email", profile.getEmail(),
+                    "role", profile.getRole(),
+                    "sub", profile.getId(),
+                    "provider", "local-campus"
+            );
+        }
         return Map.of();
     }
 
@@ -84,8 +107,13 @@ public class AuthController {
     @GetMapping("/api/user/profile")
     public UserProfile profile(@AuthenticationPrincipal OAuth2User principal, HttpSession session) {
         if (principal == null) {
-            if (!isLocalAdmin(session)) return null;
-            return localAdminProfile(session);
+            if (isLocalAdmin(session)) {
+                return localAdminProfile(session);
+            }
+            if (session != null && session.getAttribute("LOCAL_USER_PROFILE") != null) {
+                return (UserProfile) session.getAttribute("LOCAL_USER_PROFILE");
+            }
+            return null;
         }
         String providerId = resolveProviderId(principal);
         return userProfileService.findByProviderAndProviderId("google", providerId).orElse(null);
@@ -293,5 +321,87 @@ public class AuthController {
             return ResponseEntity.ok(Map.of("message", "MFA verified"));
         }
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("message", "Invalid MFA code"));
+    }
+
+    @PostMapping("/api/auth/signup")
+    public ResponseEntity<?> signup(@RequestBody Map<String, String> payload) {
+        String email = payload.get("email");
+        String password = payload.get("password");
+        String faculty = payload.get("faculty");
+        String contactNumber = payload.get("contactNumber");
+
+        if (email == null || !email.endsWith("@smart.iitus")) {
+            return ResponseEntity.badRequest().body(Map.of("message", "Invalid email domain. Must be @smart.iitus"));
+        }
+
+        if ("Computing Faculty".equals(faculty) && !email.startsWith("IT")) {
+            return ResponseEntity.badRequest().body(Map.of("message", "Computing Faculty email must start with IT"));
+        }
+        if ("Engineering Faculty".equals(faculty) && !email.startsWith("EN")) {
+            return ResponseEntity.badRequest().body(Map.of("message", "Engineering Faculty email must start with EN"));
+        }
+        if ("Medical Faculty".equals(faculty) && !email.startsWith("ME")) {
+            return ResponseEntity.badRequest().body(Map.of("message", "Medical Faculty email must start with ME"));
+        }
+
+        if (!email.matches("^[A-Z]{2}\\d{8}@smart\\.iitus$")) {
+            return ResponseEntity.badRequest().body(Map.of("message", "Email must have exactly 8 digits after the prefix"));
+        }
+
+        if (userProfileService.listAllProfiles().stream().anyMatch(p -> email.equalsIgnoreCase(p.getEmail()))) {
+            return ResponseEntity.badRequest().body(Map.of("message", "Email already registered"));
+        }
+
+        // Strong password validation
+        if (password == null || !password.matches("^(?=.*[a-zA-Z])(?=.*\\d)(?=.*[@$!%*?&./#()]).{8,}$")) {
+            return ResponseEntity.badRequest().body(Map.of("message", "Password must contain letters, numbers, and special characters"));
+        }
+
+        UserProfile profile = new UserProfile();
+        profile.setEmail(email);
+        profile.setName(email.split("@")[0]);
+        profile.setRole("USER");
+        profile.setProvider("local-campus");
+        profile.setProviderId(email);
+        profile.setPassword(passwordEncoder.encode(password));
+        profile.setContactNumber(contactNumber);
+        profile.setCreatedAt(Instant.now());
+        profile.setUpdatedAt(Instant.now());
+        
+        userProfileService.createProfile(profile);
+        return ResponseEntity.ok(Map.of("message", "Account created successfully. You can now sign in."));
+    }
+
+    @PostMapping("/api/auth/local/login")
+    public ResponseEntity<?> localLogin(@RequestBody Map<String, String> payload, HttpSession session) {
+        String username = payload.get("username");
+        String password = payload.get("password");
+
+        // Check for static admin
+        if (adminUsername.equals(username) && adminPassword.equals(password)) {
+            session.setAttribute("LOCAL_ADMIN", true);
+            session.setAttribute("LOCAL_ADMIN_USER", username);
+            return ResponseEntity.ok(Map.of("username", username, "role", "ADMIN"));
+        }
+
+        // Check for campus mail users
+        Optional<UserProfile> profileOpt = userProfileService.listAllProfiles().stream()
+                .filter(p -> (username.equalsIgnoreCase(p.getEmail()) || username.equalsIgnoreCase(p.getProviderId())) && "local-campus".equals(p.getProvider()))
+                .findFirst();
+
+        if (profileOpt.isPresent()) {
+            UserProfile profile = profileOpt.get();
+            if (passwordEncoder.matches(password, profile.getPassword())) {
+                session.setAttribute("LOCAL_USER_PROFILE", profile);
+                return ResponseEntity.ok(Map.of(
+                    "id", profile.getId(),
+                    "email", profile.getEmail(),
+                    "name", profile.getName(),
+                    "role", profile.getRole()
+                ));
+            }
+        }
+
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("message", "Invalid credentials"));
     }
 }

@@ -25,6 +25,8 @@ import com.smartcampus.security.CustomOAuth2UserService;
 import com.smartcampus.security.CustomOidcUserService;
 import com.smartcampus.security.LocalAdminAuthFilter;
 
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import jakarta.servlet.http.HttpServletResponse;
 
 @Configuration
@@ -61,7 +63,7 @@ public class SecurityConfig {
                     .requestMatchers("/student/**").hasRole("STUDENT")
                     .requestMatchers("/technician/**").hasRole("TECHNICIAN")
                     .requestMatchers("/manager/**").hasRole("MANAGER")
-                    .requestMatchers("/", "/index.html", "/api/public", "/api/auth/status", "/api/auth/logout", "/api/auth/local/login", "/api/auth/mfa/verify", "/oauth2/**", "/login/**", "/api/user").permitAll()
+                    .requestMatchers("/", "/index.html", "/api/public", "/api/auth/status", "/api/auth/logout", "/api/auth/local/login", "/api/auth/signup", "/api/auth/mfa/verify", "/oauth2/**", "/login/**", "/api/user").permitAll()
                     .anyRequest().authenticated()
                 )
                 .exceptionHandling(e -> e
@@ -128,5 +130,10 @@ public class SecurityConfig {
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
         return source;
+    }
+
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
     }
 }

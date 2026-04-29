@@ -50,7 +50,30 @@ export default function NotificationPanel() {
       <div className="section-header" style={{ marginBottom: '12px' }}>
         <p className="section-title">Notifications</p>
         {notifications.some(n => !n.read) && (
-          <button className="btn-link" style={{ fontSize: '11px' }} onClick={handleMarkAllAsRead}>
+          <button 
+            onClick={handleMarkAllAsRead}
+            style={{ 
+              fontSize: '10px', 
+              fontWeight: '700',
+              textTransform: 'uppercase',
+              letterSpacing: '0.5px',
+              padding: '4px 10px',
+              borderRadius: '6px',
+              border: '1px solid rgba(37, 99, 235, 0.1)',
+              background: 'rgba(37, 99, 235, 0.05)',
+              color: 'var(--primary)',
+              cursor: 'pointer',
+              transition: 'all 0.2s ease'
+            }}
+            onMouseOver={(e) => {
+              e.currentTarget.style.background = 'rgba(37, 99, 235, 0.1)';
+              e.currentTarget.style.borderColor = 'rgba(37, 99, 235, 0.2)';
+            }}
+            onMouseOut={(e) => {
+              e.currentTarget.style.background = 'rgba(37, 99, 235, 0.05)';
+              e.currentTarget.style.borderColor = 'rgba(37, 99, 235, 0.1)';
+            }}
+          >
             Mark all as read
           </button>
         )}

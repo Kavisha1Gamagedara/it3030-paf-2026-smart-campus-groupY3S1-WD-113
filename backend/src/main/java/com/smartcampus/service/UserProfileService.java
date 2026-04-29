@@ -144,4 +144,8 @@ public class UserProfileService {
         repository.delete(existing.get());
         return true;
     }
+
+    public UserProfile createProfile(UserProfile profile) {
+        return repository.save(profile);
+    }
 }

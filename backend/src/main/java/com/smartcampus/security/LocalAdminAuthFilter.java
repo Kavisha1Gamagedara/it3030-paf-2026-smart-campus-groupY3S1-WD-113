@@ -26,14 +26,24 @@ public class LocalAdminAuthFilter extends OncePerRequestFilter {
     ) throws ServletException, IOException {
         if (SecurityContextHolder.getContext().getAuthentication() == null) {
             HttpSession session = request.getSession(false);
-            if (session != null && Boolean.TRUE.equals(session.getAttribute("LOCAL_ADMIN"))) {
-                String username = (String) session.getAttribute("LOCAL_ADMIN_USER");
-                UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(
-                        username != null ? username : "admin",
-                        "N/A",
-                        List.of(new SimpleGrantedAuthority("ROLE_ADMIN"))
-                );
-                SecurityContextHolder.getContext().setAuthentication(auth);
+            if (session != null) {
+                if (Boolean.TRUE.equals(session.getAttribute("LOCAL_ADMIN"))) {
+                    String username = (String) session.getAttribute("LOCAL_ADMIN_USER");
+                    UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(
+                            username != null ? username : "admin",
+                            "N/A",
+                            List.of(new SimpleGrantedAuthority("ROLE_ADMIN"))
+                    );
+                    SecurityContextHolder.getContext().setAuthentication(auth);
+                } else if (session.getAttribute("LOCAL_USER_PROFILE") != null) {
+                    com.smartcampus.model.UserProfile profile = (com.smartcampus.model.UserProfile) session.getAttribute("LOCAL_USER_PROFILE");
+                    UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(
+                            profile.getEmail(),
+                            "N/A",
+                            List.of(new SimpleGrantedAuthority("ROLE_" + profile.getRole().toUpperCase()))
+                    );
+                    SecurityContextHolder.getContext().setAuthentication(auth);
+                }
             }
         }
 
