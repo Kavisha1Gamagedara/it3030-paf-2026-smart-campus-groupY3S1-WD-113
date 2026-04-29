@@ -9,6 +9,7 @@ import DashboardStudent from './pages/DashboardStudent'
 import DashboardTechnician from './pages/DashboardTechnician'
 import DashboardManager from './pages/DashboardManager'
 import Profile from './pages/Profile'
+import Mfa from './pages/Mfa'
 import Resources from './pages/Resources'
 import MyIncidents from './components/MyIncidents'
 import CreateIncident from './components/CreateIncident'
@@ -16,6 +17,7 @@ import IncidentDetails from './components/IncidentDetails'
 import { AuthProvider, useAuth } from './auth/AuthContext'
 import RequireAuth from './auth/RequireAuth'
 import { useLocation } from 'react-router-dom'
+import LogoutButton from './components/LogoutButton'
 
 export default function App() {
   const Nav = () => {
@@ -25,11 +27,17 @@ export default function App() {
     return (
       <nav className="nav">
         <div className="nav-inner">
-          <Link to="/" className="badge">Smart Campus</Link>
+          <Link to="/" className="sidebar-brand" style={{ padding: 0, margin: 0 }}>
+            <div className="brand-mark" style={{ background: 'var(--primary-gradient)', width: '32px', height: '32px', fontSize: '12px' }}>SC</div>
+            <span className="brand-name" style={{ fontSize: '18px' }}>SmartCampus</span>
+          </Link>
           <div className="nav-links">
-            <Link to="/">Home</Link>
-            {!auth?.user && <Link to="/login">Login</Link>}
-            <Link to="/dashboard">Dashboard</Link>
+            <Link to="/" className={`nav-link ${location.pathname === '/' ? 'active' : ''}`}>Home</Link>
+            {auth?.user ? (
+              <Link to="/dashboard" className={`nav-link ${location.pathname.startsWith('/dashboard') ? 'active' : ''}`}>Dashboard</Link>
+            ) : (
+              <Link to="/login" className={`nav-link ${location.pathname === '/login' ? 'active' : ''}`}>Login</Link>
+            )}
           </div>
         </div>
       </nav>
@@ -43,6 +51,7 @@ export default function App() {
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/login" element={<Login />} />
+          <Route path="/mfa" element={<Mfa />} />
           <Route path="/dashboard" element={<RequireAuth><Dashboard /></RequireAuth>} />
           <Route path="/dashboard/admin" element={<RequireAuth><DashboardAdmin /></RequireAuth>} />
           <Route path="/dashboard/user" element={<RequireAuth><DashboardUser /></RequireAuth>} />

@@ -42,6 +42,9 @@ public class UserProfileService {
         if (profile.getRole() == null || profile.getRole().isBlank()) {
             profile.setRole("USER");
         }
+        if (attributes.containsKey("notificationsEnabled")) {
+            profile.setNotificationsEnabled((Boolean) attributes.get("notificationsEnabled"));
+        }
         profile.setUpdatedAt(Instant.now());
 
         return repository.save(profile);
@@ -79,6 +82,15 @@ public class UserProfileService {
         if (updates.containsKey("picture")) {
             profile.setPicture((String) updates.get("picture"));
         }
+        if (updates.containsKey("notificationsEnabled")) {
+            profile.setNotificationsEnabled((Boolean) updates.get("notificationsEnabled"));
+        }
+        if (updates.containsKey("mfaEnabled")) {
+            profile.setMfaEnabled((Boolean) updates.get("mfaEnabled"));
+        }
+        if (updates.containsKey("mfaSecret")) {
+            profile.setMfaSecret((String) updates.get("mfaSecret"));
+        }
         profile.setUpdatedAt(Instant.now());
         return Optional.of(repository.save(profile));
     }
@@ -105,6 +117,15 @@ public class UserProfileService {
         }
         if (updates.containsKey("role")) {
             profile.setRole((String) updates.get("role"));
+        }
+        if (updates.containsKey("notificationsEnabled")) {
+            profile.setNotificationsEnabled((Boolean) updates.get("notificationsEnabled"));
+        }
+        if (updates.containsKey("mfaEnabled")) {
+            profile.setMfaEnabled((Boolean) updates.get("mfaEnabled"));
+        }
+        if (updates.containsKey("mfaSecret")) {
+            profile.setMfaSecret((String) updates.get("mfaSecret"));
         }
         profile.setUpdatedAt(Instant.now());
         return Optional.of(repository.save(profile));

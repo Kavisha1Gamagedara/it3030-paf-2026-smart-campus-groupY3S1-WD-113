@@ -43,6 +43,9 @@ public class SecurityConfig {
     @Autowired
     private LocalAdminAuthFilter localAdminAuthFilter;
 
+    @Autowired
+    private com.smartcampus.service.UserProfileService userProfileService;
+
     @Value("${FRONTEND_URL:http://localhost:5173}")
     private String frontendUrl;
 
@@ -58,7 +61,7 @@ public class SecurityConfig {
                     .requestMatchers("/student/**").hasRole("STUDENT")
                     .requestMatchers("/technician/**").hasRole("TECHNICIAN")
                     .requestMatchers("/manager/**").hasRole("MANAGER")
-                    .requestMatchers("/", "/index.html", "/api/public", "/api/auth/status", "/api/auth/logout", "/api/auth/local/login", "/oauth2/**", "/login/**", "/api/user").permitAll()
+                    .requestMatchers("/", "/index.html", "/api/public", "/api/auth/status", "/api/auth/logout", "/api/auth/local/login", "/api/auth/mfa/verify", "/oauth2/**", "/login/**", "/api/user").permitAll()
                     .anyRequest().authenticated()
                 )
                 .exceptionHandling(e -> e
@@ -71,7 +74,20 @@ public class SecurityConfig {
                         .userService(customOAuth2UserService)
                         .oidcUserService(customOidcUserService)
                     )
-                    .defaultSuccessUrl(dashboardUrl(), true)
+                    .successHandler((request, response, authentication) -> {
+                        org.springframework.security.oauth2.core.user.OAuth2User oauthUser = (org.springframework.security.oauth2.core.user.OAuth2User) authentication.getPrincipal();
+                        String sub = oauthUser.getAttribute("sub");
+                        if (sub == null) sub = oauthUser.getAttribute("id");
+                        
+                        var profile = userProfileService.findByProviderAndProviderId("google", sub);
+                        if (profile.isPresent() && profile.get().isMfaEnabled() && "USER".equalsIgnoreCase(profile.get().getRole())) {
+                            request.getSession().setAttribute("MFA_PENDING", true);
+                            request.getSession().setAttribute("MFA_USER_ID", profile.get().getId());
+                            response.sendRedirect(frontendUrl + (frontendUrl.endsWith("/") ? "" : "/") + "mfa");
+                        } else {
+                            response.sendRedirect(dashboardUrl());
+                        }
+                    })
                 )
                 .logout(logout -> logout
                     .logoutUrl("/api/auth/logout")
