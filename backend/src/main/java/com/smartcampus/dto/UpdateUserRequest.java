@@ -19,6 +19,9 @@ public class UpdateUserRequest {
 
     private String picture;
 
+    @Pattern(regexp = "^\\d{10}$", message = "Contact number must be exactly 10 digits")
+    private String contactNumber;
+
     public String getName() {
         return name;
     }
@@ -49,5 +52,13 @@ public class UpdateUserRequest {
 
     public void setPicture(String picture) {
         this.picture = picture;
+    }
+
+    public String getContactNumber() {
+        return contactNumber;
+    }
+
+    public void setContactNumber(String contactNumber) {
+        this.contactNumber = contactNumber;
     }
 }
