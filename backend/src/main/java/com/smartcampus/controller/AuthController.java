@@ -121,20 +121,37 @@ public class AuthController {
     @PutMapping("/api/user/profile")
     public ResponseEntity<?> updateProfile(
             @AuthenticationPrincipal OAuth2User principal,
-            @RequestBody Map<String, Object> payload,
+            @jakarta.validation.Valid @RequestBody com.smartcampus.dto.ProfileUpdateRequest request,
             HttpSession session
     ) {
         if (principal == null) {
             if (isLocalAdmin(session)) {
-                UserProfile updated = updateLocalAdminProfile(session, payload);
-                return ResponseEntity.ok(updated);
+                // Local admin still uses the Map-based update for now or we can adapt it
+                UserProfile profile = localAdminProfile(session);
+                if (request.getName() != null) profile.setName(request.getName());
+                if (request.getNotificationsEnabled() != null) profile.setNotificationsEnabled(request.getNotificationsEnabled());
+                profile.setUpdatedAt(Instant.now());
+                return ResponseEntity.ok(profile);
             }
+            
+            // Handle local campus user from session
+            if (session != null && session.getAttribute("LOCAL_USER_PROFILE") != null) {
+                UserProfile sessionProfile = (UserProfile) session.getAttribute("LOCAL_USER_PROFILE");
+                return userProfileService
+                        .selfUpdateProfile("local-campus", sessionProfile.getEmail(), request)
+                        .<ResponseEntity<?>>map(updated -> {
+                            session.setAttribute("LOCAL_USER_PROFILE", updated);
+                            return ResponseEntity.ok(updated);
+                        })
+                        .orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("message", "Profile not found")));
+            }
+            
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("message", "Not authenticated"));
         }
 
         String providerId = resolveProviderId(principal);
         return userProfileService
-                .updateProfile("google", providerId, payload)
+                .selfUpdateProfile("google", providerId, request)
                 .<ResponseEntity<?>>map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("message", "Profile not found")));
     }

@@ -15,9 +15,11 @@ import com.smartcampus.repository.UserProfileRepository;
 public class UserProfileService {
 
     private final UserProfileRepository repository;
+    private final org.springframework.security.crypto.password.PasswordEncoder passwordEncoder;
 
-    public UserProfileService(UserProfileRepository repository) {
+    public UserProfileService(UserProfileRepository repository, org.springframework.security.crypto.password.PasswordEncoder passwordEncoder) {
         this.repository = repository;
+        this.passwordEncoder = passwordEncoder;
     }
 
     public UserProfile upsertFromOAuth(String provider, Map<String, Object> attributes) {
@@ -118,6 +120,9 @@ public class UserProfileService {
         if (request.getRole() != null) {
             profile.setRole(request.getRole());
         }
+        if (request.getContactNumber() != null) {
+            profile.setContactNumber(request.getContactNumber());
+        }
         
         profile.setUpdatedAt(Instant.now());
         return Optional.of(repository.save(profile));
@@ -135,6 +140,26 @@ public class UserProfileService {
         if (existing.isEmpty()) return false;
         repository.delete(existing.get());
         return true;
+    }
+
+    public Optional<UserProfile> selfUpdateProfile(String provider, String providerId, com.smartcampus.dto.ProfileUpdateRequest request) {
+        Optional<UserProfile> existing = repository.findByProviderAndProviderId(provider, providerId);
+        if (existing.isEmpty()) {
+            return Optional.empty();
+        }
+
+        UserProfile profile = existing.get();
+        if (request.getName() != null) profile.setName(request.getName());
+        if (request.getContactNumber() != null) profile.setContactNumber(request.getContactNumber());
+        if (request.getNotificationsEnabled() != null) profile.setNotificationsEnabled(request.getNotificationsEnabled());
+        
+        // Only allow password update for local campus users
+        if ("local-campus".equals(profile.getProvider()) && request.getNewPassword() != null && !request.getNewPassword().isBlank()) {
+            profile.setPassword(passwordEncoder.encode(request.getNewPassword()));
+        }
+
+        profile.setUpdatedAt(Instant.now());
+        return Optional.of(repository.save(profile));
     }
 
     public UserProfile createProfile(UserProfile profile) {

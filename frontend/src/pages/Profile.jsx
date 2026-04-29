@@ -9,8 +9,11 @@ export default function Profile() {
     name: '',
     email: '',
     picture: '',
+    contactNumber: '',
     notificationsEnabled: true,
-    mfaEnabled: false
+    mfaEnabled: false,
+    newPassword: '',
+    confirmNewPassword: ''
   })
   const [status, setStatus] = useState({})
   const [mfaSetup, setMfaSetup] = useState(null)
@@ -18,12 +21,14 @@ export default function Profile() {
 
   useEffect(() => {
     if (profile) {
-      setForm({
+      setForm((prev) => ({
+        ...prev,
         name: profile.name || '',
         email: profile.email || '',
+        contactNumber: profile.contactNumber || '',
         notificationsEnabled: profile.notificationsEnabled !== false,
         mfaEnabled: !!profile.mfaEnabled
-      })
+      }))
     }
   }, [profile])
 
@@ -101,11 +106,37 @@ export default function Profile() {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
+    
+    // Validate password if user is trying to change it
+    if (form.newPassword) {
+        if (form.newPassword !== form.confirmNewPassword) {
+            setStatus({ error: 'Passwords do not match' })
+            return
+        }
+        const passwordRegex = /^(?=.*[a-zA-Z])(?=.*\d)(?=.*[@$!%*?&./#()]).{8,}$/;
+        if (!passwordRegex.test(form.newPassword)) {
+            setStatus({ error: 'New password must contain letters, numbers, and special characters, and be at least 8 characters long' });
+            return
+        }
+    }
+
+    // Validate contact number if present
+    if (form.contactNumber && !/^\d{10}$/.test(form.contactNumber)) {
+        setStatus({ error: 'Contact number must be exactly 10 digits' });
+        return
+    }
+
     setStatus({ saving: true })
-    const { mfaEnabled, ...rest } = form
+    const { mfaEnabled, confirmNewPassword, ...rest } = form
+    
+    // If password is empty string, don't send it
+    if (!rest.newPassword) delete rest.newPassword;
+
     const res = await updateProfile(rest)
     if (res && res.ok) {
       setStatus({ saved: true })
+      // Clear password fields on success
+      setForm(prev => ({ ...prev, newPassword: '', confirmNewPassword: '' }))
       setTimeout(() => setStatus({}), 3000)
     } else {
       setStatus({ error: (res && res.message) || 'Failed to save' })
@@ -124,6 +155,8 @@ export default function Profile() {
       setStatus({ error: (res && res.message) || 'Failed to delete' })
     }
   }
+
+  const isLocalUser = profile?.provider === 'local-campus';
 
   return (
     <main className="page fade-in">
@@ -164,6 +197,48 @@ export default function Profile() {
                     readOnly
                 />
             </div>
+
+            <div className="input-group">
+                <label className="section-title" style={{ display: 'block', marginBottom: '8px' }}>Contact Number</label>
+                <input 
+                    value={form.contactNumber} 
+                    onChange={(e) => {
+                        const val = e.target.value.replace(/\D/g, '').substring(0, 10);
+                        setForm(s => ({ ...s, contactNumber: val }));
+                    }} 
+                    className="modern-input" 
+                    placeholder="e.g. 0771234567"
+                    style={{ width: '100%', padding: '12px 16px', borderRadius: '12px', border: '1px solid var(--border)', background: '#f8fafc' }}
+                />
+            </div>
+
+            {isLocalUser && (
+                <div style={{ borderTop: '1px solid var(--border)', paddingTop: '20px', marginTop: '10px' }}>
+                    <p className="section-title" style={{ marginBottom: '16px', color: 'var(--primary)', fontWeight: '600' }}>Reset Password</p>
+                    <div className="input-group" style={{ marginBottom: '16px' }}>
+                        <label className="section-title" style={{ display: 'block', marginBottom: '8px', fontSize: '12px' }}>New Password</label>
+                        <input 
+                            type="password"
+                            value={form.newPassword} 
+                            onChange={handleChange('newPassword')} 
+                            className="modern-input" 
+                            placeholder="••••••••"
+                            style={{ width: '100%', padding: '12px 16px', borderRadius: '12px', border: '1px solid var(--border)', background: '#f8fafc' }}
+                        />
+                    </div>
+                    <div className="input-group">
+                        <label className="section-title" style={{ display: 'block', marginBottom: '8px', fontSize: '12px' }}>Confirm New Password</label>
+                        <input 
+                            type="password"
+                            value={form.confirmNewPassword} 
+                            onChange={handleChange('confirmNewPassword')} 
+                            className="modern-input" 
+                            placeholder="••••••••"
+                            style={{ width: '100%', padding: '12px 16px', borderRadius: '12px', border: '1px solid var(--border)', background: '#f8fafc' }}
+                        />
+                    </div>
+                </div>
+            )}
 
             <div style={{ 
                 background: 'rgba(37, 99, 235, 0.05)', 

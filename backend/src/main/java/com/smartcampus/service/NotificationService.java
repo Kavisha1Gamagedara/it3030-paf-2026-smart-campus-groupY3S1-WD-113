@@ -21,12 +21,22 @@ public class NotificationService {
     private boolean isNotificationsEnabled(String userId) {
         if (userId == null) return false;
         if ("local-admin".equals(userId)) return true; // Default for local admin or handle via session if needed
-        return userProfileRepository.findById(userId)
-                .map(UserProfile::isNotificationsEnabled)
-                .orElse(true);
+        
+        java.util.Optional<UserProfile> profile = userProfileRepository.findById(userId);
+        if (profile.isEmpty()) {
+            profile = userProfileRepository.findByEmail(userId);
+        }
+        if (profile.isEmpty()) {
+            profile = userProfileRepository.findByProviderAndProviderId("google", userId);
+        }
+        
+        return profile.map(UserProfile::isNotificationsEnabled).orElse(true);
     }
 
     public Notification createNotification(String userId, String title, String message, String type, String referenceId) {
+        if (!isNotificationsEnabled(userId)) {
+            return null;
+        }
         Notification notification = new Notification(userId, title, message, type, referenceId);
         return notificationRepository.save(notification);
     }
