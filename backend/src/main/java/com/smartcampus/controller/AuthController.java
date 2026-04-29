@@ -30,7 +30,6 @@ import com.smartcampus.service.MfaService;
 
 import org.springframework.security.crypto.password.PasswordEncoder;
 import jakarta.servlet.http.HttpSession;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 
 @RestController
 public class AuthController {
@@ -324,15 +323,11 @@ public class AuthController {
     }
 
     @PostMapping("/api/auth/signup")
-    public ResponseEntity<?> signup(@RequestBody Map<String, String> payload) {
-        String email = payload.get("email");
-        String password = payload.get("password");
-        String faculty = payload.get("faculty");
-        String contactNumber = payload.get("contactNumber");
-
-        if (email == null || !email.endsWith("@smart.iitus")) {
-            return ResponseEntity.badRequest().body(Map.of("message", "Invalid email domain. Must be @smart.iitus"));
-        }
+    public ResponseEntity<?> signup(@jakarta.validation.Valid @RequestBody com.smartcampus.dto.SignupRequest request) {
+        String email = request.getEmail();
+        String password = request.getPassword();
+        String faculty = request.getFaculty();
+        String contactNumber = request.getContactNumber();
 
         if ("Computing Faculty".equals(faculty) && !email.startsWith("IT")) {
             return ResponseEntity.badRequest().body(Map.of("message", "Computing Faculty email must start with IT"));
@@ -344,17 +339,8 @@ public class AuthController {
             return ResponseEntity.badRequest().body(Map.of("message", "Medical Faculty email must start with ME"));
         }
 
-        if (!email.matches("^[A-Z]{2}\\d{8}@smart\\.iitus$")) {
-            return ResponseEntity.badRequest().body(Map.of("message", "Email must have exactly 8 digits after the prefix"));
-        }
-
         if (userProfileService.listAllProfiles().stream().anyMatch(p -> email.equalsIgnoreCase(p.getEmail()))) {
             return ResponseEntity.badRequest().body(Map.of("message", "Email already registered"));
-        }
-
-        // Strong password validation
-        if (password == null || !password.matches("^(?=.*[a-zA-Z])(?=.*\\d)(?=.*[@$!%*?&./#()]).{8,}$")) {
-            return ResponseEntity.badRequest().body(Map.of("message", "Password must contain letters, numbers, and special characters"));
         }
 
         UserProfile profile = new UserProfile();
@@ -373,9 +359,9 @@ public class AuthController {
     }
 
     @PostMapping("/api/auth/local/login")
-    public ResponseEntity<?> localLogin(@RequestBody Map<String, String> payload, HttpSession session) {
-        String username = payload.get("username");
-        String password = payload.get("password");
+    public ResponseEntity<?> localLogin(@jakarta.validation.Valid @RequestBody com.smartcampus.dto.LoginRequest request, HttpSession session) {
+        String username = request.getUsername();
+        String password = request.getPassword();
 
         // Check for static admin
         if (adminUsername.equals(username) && adminPassword.equals(password)) {

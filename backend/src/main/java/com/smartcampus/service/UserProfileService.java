@@ -99,34 +99,26 @@ public class UserProfileService {
         return repository.findAll(Sort.by(Sort.Direction.DESC, "updatedAt"));
     }
 
-    public Optional<UserProfile> updateProfileById(String id, Map<String, Object> updates) {
+    public Optional<UserProfile> updateProfileById(String id, com.smartcampus.dto.UpdateUserRequest request) {
         Optional<UserProfile> existing = repository.findById(id);
         if (existing.isEmpty()) {
             return Optional.empty();
         }
 
         UserProfile profile = existing.get();
-        if (updates.containsKey("name")) {
-            profile.setName((String) updates.get("name"));
+        if (request.getName() != null) {
+            profile.setName(request.getName());
         }
-        if (updates.containsKey("email")) {
-            profile.setEmail((String) updates.get("email"));
+        if (request.getEmail() != null) {
+            profile.setEmail(request.getEmail());
         }
-        if (updates.containsKey("picture")) {
-            profile.setPicture((String) updates.get("picture"));
+        if (request.getPicture() != null) {
+            profile.setPicture(request.getPicture());
         }
-        if (updates.containsKey("role")) {
-            profile.setRole((String) updates.get("role"));
+        if (request.getRole() != null) {
+            profile.setRole(request.getRole());
         }
-        if (updates.containsKey("notificationsEnabled")) {
-            profile.setNotificationsEnabled((Boolean) updates.get("notificationsEnabled"));
-        }
-        if (updates.containsKey("mfaEnabled")) {
-            profile.setMfaEnabled((Boolean) updates.get("mfaEnabled"));
-        }
-        if (updates.containsKey("mfaSecret")) {
-            profile.setMfaSecret((String) updates.get("mfaSecret"));
-        }
+        
         profile.setUpdatedAt(Instant.now());
         return Optional.of(repository.save(profile));
     }
