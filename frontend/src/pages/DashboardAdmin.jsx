@@ -29,11 +29,25 @@ export default function DashboardAdmin() {
   const [savingId, setSavingId] = useState('')
   const [deletingId, setDeletingId] = useState('')
   const [activeTab, setActiveTab] = useState('INSIGHTS')
+  const [searchQuery, setSearchQuery] = useState('')
+  const [roleFilter, setRoleFilter] = useState('ALL')
 
   const usersCount = useMemo(() => users.length, [users])
   const isAuthenticated = !!(user && (user.sub || user.id))
   const roleValue = (profile && profile.role) || ''
   const isAdmin = roleValue.toUpperCase() === 'ADMIN'
+
+  const filteredUsers = useMemo(() => {
+    return users.filter(user => {
+      const matchesSearch = 
+        (user.name || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (user.email || '').toLowerCase().includes(searchQuery.toLowerCase())
+      
+      const matchesRole = roleFilter === 'ALL' || user.role === roleFilter
+      
+      return matchesSearch && matchesRole
+    })
+  }, [users, searchQuery, roleFilter])
 
   const loadUsers = async () => {
     setLoading(true)
@@ -144,8 +158,33 @@ export default function DashboardAdmin() {
               <h2 style={{ margin: 0 }}>User Management</h2>
               <p className="helper">Manage registered users, update roles, or remove access.</p>
             </div>
-            <div className="table-actions">
-              <span className="badge">{usersCount} users</span>
+            <div className="table-actions" style={{ gap: '16px' }}>
+              <div className="search-container" style={{ maxWidth: '300px', margin: 0 }}>
+                <input 
+                  type="text" 
+                  placeholder="Search name or email..." 
+                  value={searchQuery} 
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="modern-input"
+                  style={{ width: '100%', padding: '8px 12px 8px 36px' }}
+                />
+                <span style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--muted)', fontSize: '14px' }}>🔍</span>
+              </div>
+
+              <select 
+                className="modern-input" 
+                value={roleFilter} 
+                onChange={(e) => setRoleFilter(e.target.value)}
+                style={{ padding: '8px 12px', borderRadius: '12px', background: '#fff', fontSize: '14px', minWidth: '130px' }}
+              >
+                <option value="ALL">All Roles</option>
+                {ROLE_OPTIONS.map(role => (
+                  <option key={role} value={role}>{role.replace('_', ' ')}</option>
+                ))}
+              </select>
+
+              <span className="badge" style={{ whiteSpace: 'nowrap' }}>{filteredUsers.length} filtered</span>
+              
               <button type="button" className="btn btn-outline" onClick={loadUsers} disabled={loading}>
                 {loading ? 'Refreshing...' : 'Refresh'}
               </button>
@@ -185,7 +224,7 @@ export default function DashboardAdmin() {
                 </tr>
               </thead>
               <tbody>
-                {users.map((user) => {
+                {filteredUsers.map((user) => {
                   const isEditing = editId === user.id
                   return (
                     <tr key={user.id}>

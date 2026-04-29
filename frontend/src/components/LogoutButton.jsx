@@ -8,13 +8,13 @@ export default function LogoutButton({ className = 'btn btn-outline', children }
 
   const handleLogout = async () => {
     try {
+      // Navigate to home first to avoid RequireAuth redirecting to /login
+      navigate('/', { replace: true })
       if (auth && auth.logout) {
         await auth.logout()
       }
     } catch (e) {
       // ignore
-    } finally {
-      navigate('/', { replace: true })
     }
   }
 

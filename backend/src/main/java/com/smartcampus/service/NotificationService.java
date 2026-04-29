@@ -5,6 +5,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import com.smartcampus.model.Notification;
 import com.smartcampus.repository.NotificationRepository;
+import com.smartcampus.repository.UserProfileRepository;
+import com.smartcampus.model.UserProfile;
+import java.util.Optional;
 
 @Service
 public class NotificationService {
@@ -12,16 +15,29 @@ public class NotificationService {
     @Autowired
     private NotificationRepository notificationRepository;
 
+    @Autowired
+    private UserProfileRepository userProfileRepository;
+
+    private boolean isNotificationsEnabled(String userId) {
+        if (userId == null) return false;
+        if ("local-admin".equals(userId)) return true; // Default for local admin or handle via session if needed
+        return userProfileRepository.findById(userId)
+                .map(UserProfile::isNotificationsEnabled)
+                .orElse(true);
+    }
+
     public Notification createNotification(String userId, String title, String message, String type, String referenceId) {
         Notification notification = new Notification(userId, title, message, type, referenceId);
         return notificationRepository.save(notification);
     }
 
     public List<Notification> getNotificationsForUser(String userId) {
+        if (!isNotificationsEnabled(userId)) return List.of();
         return notificationRepository.findByUserIdOrderByCreatedAtDesc(userId);
     }
 
     public long getUnreadCount(String userId) {
+        if (!isNotificationsEnabled(userId)) return 0;
         return notificationRepository.countByUserIdAndIsReadFalse(userId);
     }
 

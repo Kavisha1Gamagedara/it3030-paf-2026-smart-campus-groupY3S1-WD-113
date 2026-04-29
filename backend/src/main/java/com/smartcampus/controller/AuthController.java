@@ -25,6 +25,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.smartcampus.model.UserProfile;
 import com.smartcampus.service.UserProfileService;
+import com.smartcampus.service.MfaService;
 
 import jakarta.servlet.http.HttpSession;
 
@@ -45,9 +46,18 @@ public class AuthController {
     @Autowired
     private UserProfileService userProfileService;
 
+    @Autowired
+    private MfaService mfaService;
+
     @GetMapping("/api/user")
     public Map<String, Object> user(@AuthenticationPrincipal OAuth2User principal, HttpSession session) {
-        if (principal != null) return principal.getAttributes();
+        if (principal != null) {
+            Map<String, Object> attrs = new java.util.HashMap<>(principal.getAttributes());
+            if (Boolean.TRUE.equals(session.getAttribute("MFA_PENDING"))) {
+                attrs.put("mfaRequired", true);
+            }
+            return attrs;
+        }
         if (isLocalAdmin(session)) {
             String username = localAdminUsername(session);
             return Map.of(
@@ -213,10 +223,75 @@ public class AuthController {
         if (updates.containsKey("picture")) {
             profile.setPicture((String) updates.get("picture"));
         }
+        if (updates.containsKey("notificationsEnabled")) {
+            profile.setNotificationsEnabled((Boolean) updates.get("notificationsEnabled"));
+        }
         profile.setUpdatedAt(Instant.now());
         if (session != null) {
             session.setAttribute("LOCAL_ADMIN_PROFILE", profile);
         }
         return profile;
+    }
+
+    @GetMapping("/api/user/mfa/setup")
+    public ResponseEntity<?> setupMfa(@AuthenticationPrincipal OAuth2User principal, HttpSession session) {
+        if (principal == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        String providerId = resolveProviderId(principal);
+        UserProfile profile = userProfileService.findByProviderAndProviderId("google", providerId).orElse(null);
+        if (profile == null) return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+
+        String secret = mfaService.generateSecret();
+        try {
+            String qrCode = mfaService.generateQrCodeBase64(secret, profile.getEmail());
+            return ResponseEntity.ok(Map.of("secret", secret, "qrCode", qrCode));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("message", "Error generating QR code"));
+        }
+    }
+
+    @PostMapping("/api/user/mfa/enable")
+    public ResponseEntity<?> enableMfa(
+            @AuthenticationPrincipal OAuth2User principal,
+            @RequestBody Map<String, String> payload
+    ) {
+        if (principal == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        String code = payload.get("code");
+        String secret = payload.get("secret");
+        if (code == null || secret == null) return ResponseEntity.badRequest().body(Map.of("message", "Code and secret required"));
+
+        if (mfaService.verifyCode(secret, code)) {
+            String providerId = resolveProviderId(principal);
+            userProfileService.updateProfile("google", providerId, Map.of("mfaEnabled", true, "mfaSecret", secret));
+            return ResponseEntity.ok(Map.of("message", "MFA enabled successfully"));
+        }
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("message", "Invalid verification code"));
+    }
+
+    @PostMapping("/api/user/mfa/disable")
+    public ResponseEntity<?> disableMfa(@AuthenticationPrincipal OAuth2User principal) {
+        if (principal == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        String providerId = resolveProviderId(principal);
+        userProfileService.updateProfile("google", providerId, Map.of("mfaEnabled", false, "mfaSecret", ""));
+        return ResponseEntity.ok(Map.of("message", "MFA disabled successfully"));
+    }
+
+    @PostMapping("/api/auth/mfa/verify")
+    public ResponseEntity<?> verifyMfa(HttpSession session, @RequestBody Map<String, String> payload) {
+        if (!Boolean.TRUE.equals(session.getAttribute("MFA_PENDING"))) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("message", "MFA not pending"));
+        }
+        String userId = (String) session.getAttribute("MFA_USER_ID");
+        String code = payload.get("code");
+        
+        UserProfile profile = userProfileService.listAllProfiles().stream()
+                .filter(p -> p.getId().equals(userId))
+                .findFirst().orElse(null);
+                
+        if (profile != null && mfaService.verifyCode(profile.getMfaSecret(), code)) {
+            session.removeAttribute("MFA_PENDING");
+            session.removeAttribute("MFA_USER_ID");
+            return ResponseEntity.ok(Map.of("message", "MFA verified"));
+        }
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("message", "Invalid MFA code"));
     }
 }

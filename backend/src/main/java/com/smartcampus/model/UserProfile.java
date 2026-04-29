@@ -19,6 +19,9 @@ public class UserProfile {
     private String role;
     private Instant createdAt;
     private Instant updatedAt;
+    private boolean notificationsEnabled = true;
+    private boolean mfaEnabled = false;
+    private String mfaSecret;
 
     public String getId() {
         return id;
@@ -90,5 +93,29 @@ public class UserProfile {
 
     public void setUpdatedAt(Instant updatedAt) {
         this.updatedAt = updatedAt;
+    }
+
+    public boolean isNotificationsEnabled() {
+        return notificationsEnabled;
+    }
+
+    public void setNotificationsEnabled(boolean notificationsEnabled) {
+        this.notificationsEnabled = notificationsEnabled;
+    }
+
+    public boolean isMfaEnabled() {
+        return mfaEnabled;
+    }
+
+    public void setMfaEnabled(boolean mfaEnabled) {
+        this.mfaEnabled = mfaEnabled;
+    }
+
+    public String getMfaSecret() {
+        return mfaSecret;
+    }
+
+    public void setMfaSecret(String mfaSecret) {
+        this.mfaSecret = mfaSecret;
     }
 }

@@ -1,11 +1,14 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { useAuth } from '../auth/AuthContext';
+import LogoutButton from '../components/LogoutButton';
 
 // Using standard project-relative paths for images in the public folder.
 const HERO_IMAGE = '/hero-bg.png';
 const STUDENT_IMAGE = '/student-success.png';
 
 export default function Home() {
+    const { user } = useAuth();
     return (
         <div className="home-page">
             {/* Custom Header */}
@@ -23,9 +26,15 @@ export default function Home() {
                             <input type="text" placeholder="Search here..." style={{ border: 'none', background: '#f1f5f9', padding: '6px 12px 6px 32px', borderRadius: '4px', fontSize: '12px' }} />
                             <span style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)' }}>🔍</span>
                         </div>
-                        <Link to="/login">
-                            <button className="btn btn-primary" style={{ borderRadius: '4px', background: '#4338ca', padding: '8px 24px' }}>Log in ↗</button>
-                        </Link>
+                        {user ? (
+                            <Link to="/dashboard">
+                                <button className="btn btn-primary" style={{ borderRadius: '4px', background: '#4338ca', padding: '8px 24px' }}>Dashboard ↗</button>
+                            </Link>
+                        ) : (
+                            <Link to="/login">
+                                <button className="btn btn-primary" style={{ borderRadius: '4px', background: '#4338ca', padding: '8px 24px' }}>Log in ↗</button>
+                            </Link>
+                        )}
                     </div>
                 </div>
                 <div className="header-bottom">
@@ -54,8 +63,8 @@ export default function Home() {
                         Sri Lanka.
                     </h1>
                     <div className="hero-actions">
-                        <Link to="/login" className="hero-btn primary">
-                            <span>Admission</span>
+                        <Link to={user ? "/dashboard" : "/login"} className="hero-btn primary">
+                            <span>{user ? "Go to Dashboard" : "Admission"}</span>
                             <span>↗</span>
                         </Link>
                         <div className="hero-btn">

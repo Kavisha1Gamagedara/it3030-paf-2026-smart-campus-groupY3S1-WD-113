@@ -20,5 +20,9 @@ export default function RequireAuth({ children }) {
     return <Navigate to="/login" state={{ from: location }} replace />
   }
 
+  if (user.mfaRequired && location.pathname !== '/mfa') {
+    return <Navigate to="/mfa" replace />
+  }
+
   return children
 }
