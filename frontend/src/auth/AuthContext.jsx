@@ -69,14 +69,23 @@ export function AuthProvider({ children }) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, password, role })
       })
+      
+      const data = await res.json().catch(() => ({ message: 'Invalid credentials' }))
+      
       if (!res.ok) {
-        const msg = await res.text()
-        return { ok: false, message: msg || 'Invalid credentials' }
+        return { ok: false, message: data.message || 'Invalid credentials' }
       }
-      localStorage.setItem('smartCampusLocalAdmin', '1')
-      localStorage.setItem('smartCampusLocalAdminUser', username)
+      
+      if (data.role === 'ADMIN') {
+        localStorage.setItem('smartCampusLocalAdmin', '1')
+        localStorage.setItem('smartCampusLocalAdminUser', username)
+      } else {
+        localStorage.removeItem('smartCampusLocalAdmin')
+        localStorage.removeItem('smartCampusLocalAdminUser')
+      }
+      
       await load()
-      return { ok: true }
+      return { ok: true, role: data.role }
     } catch (e) {
       return { ok: false, message: e.message || 'Login failed' }
     }

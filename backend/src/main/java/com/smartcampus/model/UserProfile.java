@@ -22,6 +22,8 @@ public class UserProfile {
     private boolean notificationsEnabled = true;
     private boolean mfaEnabled = false;
     private String mfaSecret;
+    private String password;
+    private String contactNumber;
 
     public String getId() {
         return id;
@@ -117,5 +119,21 @@ public class UserProfile {
 
     public void setMfaSecret(String mfaSecret) {
         this.mfaSecret = mfaSecret;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
+    }
+
+    public String getContactNumber() {
+        return contactNumber;
+    }
+
+    public void setContactNumber(String contactNumber) {
+        this.contactNumber = contactNumber;
     }
 }
